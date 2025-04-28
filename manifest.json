@@ -1,0 +1,24 @@
+{
+    "name": "Job Hunting Helper",
+    "description": "Created for job hunting purposes",
+    "version": "1.0",
+    "manifest_version": 3,
+    "permissions": [
+        "contextMenus",
+        "activeTab",
+        "scripting"
+    ],
+    "background": {
+        "service_worker": "background.js"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["content.js"]
+        }
+    ],
+    "action": {
+        "default_title": "Click to open panel",
+        "default_icon": "hello.png"
+    }
+}
