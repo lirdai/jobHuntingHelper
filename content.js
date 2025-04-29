@@ -1,11 +1,77 @@
+function findTargetElements(key, selectors, keywords) {
+    let selectorCollections;
+    const results = {};
+
+    for (let selector of selectors) {
+        selectorCollections = document.querySelectorAll(selector);
+    }
+
+    selectorCollections.forEach(selector => {
+        const className = selector.className || '';
+        const dataTestId = selector.getAttribute('data-testid') || '';
+
+        for (const keyword of keywords) {
+            if (className.includes(keyword) || dataTestId.includes(keyword)) {
+                results[key] = {
+                    element: selector,
+                    className,
+                    dataTestId,
+                    innerText: selector.innerText
+                }
+                break; // 找到一个匹配关键词就跳出当前div检查
+            }
+        }
+    });
+
+    return results;
+}
+
+const collectInfoForPanel = () => {
+    let matches = {};
+
+    const keywords = {
+        company: ["companyName"],
+        position: ['JobInfoHeader'],
+        companyDesc: ["jobsearch-JobComponent-description"],
+    };
+
+    const selectors = {
+        company: ["div"],
+        position: ["h2"],
+        companyDesc: ["div"],
+    };
+
+    for (const key of Object.keys(keywords)) {
+        matches = {
+            ...matches,
+            ...findTargetElements(key, selectors[key], keywords[key]),
+        };
+    }
+
+    // 举个例子，只展示第一个结果并加面板
+    if (Object.values(matches) !== 0) {
+        createSidePanel(matches);
+    } else {
+        console.log("没找到匹配的元素");
+    }
+
+    return matches;
+};
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "open_panel") {
-        console.log("Received open_panel message!");
-        createSidePanel("");
+        console.log(message.action);
+        createSidePanel(collectInfoForPanel());
+    }
+
+    if (message.action === 'Website has been updated!') {
+        console.log(message.action);
+        updateSidePanel(collectInfoForPanel());
     }
 });
 
-function createSidePanel() {
+
+function createSidePanel(matches) {
     if (document.getElementById("my-extension-panel")) return;
 
     const panel = document.createElement("div");
@@ -30,13 +96,13 @@ function createSidePanel() {
         </div>
 
         <label>Company</label>
-        <input type="text" id="company" />
+        <input type="text" id="company" value="${matches?.company?.innerText || ""}" />
 
         <label>Position</label>
-        <input type="text" id="position" />
+        <input type="text" id="position" value="${matches?.position?.innerText || ""}" />
 
         <label>Company Description</label>
-        <textarea id="companyDesc" /></textarea>
+        <textarea id="companyDesc" />${matches?.companyDesc?.innerText || ""}</textarea>
 
         <button id="createResume">✔</button>
     `;
@@ -99,4 +165,16 @@ function createSidePanel() {
     document.getElementById("closePanel").addEventListener("click", () => {
         panel.remove();
     });
+}
+
+
+function updateSidePanel(matches) {
+    if (!document.getElementById("my-extension-panel")) {
+        createSidePanel(matches);
+        return;
+    }
+
+    document.getElementById("company").value = matches.company?.innerText || "";
+    document.getElementById("position").value = matches.position?.innerText || "";
+    document.getElementById("companyDesc").value = matches.companyDesc?.innerText || "";
 }
