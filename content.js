@@ -26,7 +26,8 @@ function findTargetElements(key, selectors, keywords) {
     return results;
 }
 
-const collectInfoForPanel = () => {
+
+function collectInfoForPanel() {
     let matches = {};
 
     const keywords = {
@@ -48,25 +49,25 @@ const collectInfoForPanel = () => {
         };
     }
 
-    // 举个例子，只展示第一个结果并加面板
-    if (Object.values(matches) !== 0) {
-        createSidePanel(matches);
-    } else {
-        console.log("没找到匹配的元素");
-    }
-
     return matches;
 };
 
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    const isPanelClosed = localStorage.getItem("panelClosed");
+    const matches = collectInfoForPanel();
+
     if (message.action === "open_panel") {
         console.log(message.action);
-        createSidePanel(collectInfoForPanel());
+        localStorage.setItem("panelClosed", "false");
+        createSidePanel(matches); // 调用创建面板的函数
     }
 
     if (message.action === 'Website has been updated!') {
         console.log(message.action);
-        updateSidePanel(collectInfoForPanel());
+        if (isPanelClosed !== "true") {
+            updateSidePanel(matches);
+        }
     }
 });
 
@@ -164,6 +165,7 @@ function createSidePanel(matches) {
 
     document.getElementById("closePanel").addEventListener("click", () => {
         panel.remove();
+        localStorage.setItem("panelClosed", "true");
     });
 }
 
