@@ -88,7 +88,7 @@ function createSidePanel(matches) {
     panel.style.zIndex = "9999";
     panel.style.padding = "25px";
     panel.style.overflowY = "auto";
-    panel.style.fontFamily = "Arial, sans-serif";
+    panel.style.fontFamily = "Proxima Nova, Helvetica, Arial, sans-serif";
     panel.style.borderRadius = "10px 0 0 10px";
 
     panel.innerHTML = `
@@ -111,15 +111,72 @@ function createSidePanel(matches) {
 
     document.body.appendChild(panel);
 
+    // 插入样式（只插入一次）
+    const style = document.createElement("style");
+    style.textContent = `
+        #closePanel {
+            font-size: 30px;
+            color: red;
+            font-weight: bold;
+            border: 0px;
+            border-radius: 5px;
+            padding: 10px 20px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #closePanel:hover {
+            background-color: #ffe6e6;
+        }
+
+        #closePanel:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
+        }
+
+        #closePanel:active {
+            background-color: #ffcccc;
+            transform: scale(0.98);
+        }
+
+        #createResume {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            margin-left: auto;
+            font-size: 30px;
+            color: green;
+            font-weight: bold;
+            border: 0px;
+            border-radius: 5px;
+            padding: 10px 20px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        #createResume:hover {
+            background-color: #e6ffe6;
+            border-color: darkgreen;
+        }
+
+        #createResume:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 128, 0, 0.5);
+        }
+
+        #createResume:active {
+            background-color: #ccffcc;
+            transform: scale(0.98);
+        }
+    `;
+    document.head.appendChild(style);
+
     const title = document.getElementById("title");
     title.style.display = "flex";
     title.style.justifyContent = 'space-between';
     title.style.marginBottom = "30px"; // 相当于 <br/><br/>
-
-    const closePanelButton = document.getElementById("closePanel");
-    closePanelButton.style.fontSize = '30px';
-    closePanelButton.style.color = 'red';
-    closePanelButton.style.fontWeight = 'bold';
 
     const companyInput = document.getElementById("company");
     companyInput.style.width = "90%";
