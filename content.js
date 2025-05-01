@@ -1,9 +1,10 @@
 function findTargetElements(key, selectors, keywords) {
-    let selectorCollections;
+    let selectorCollections = [];
     const results = {};
 
     for (let selector of selectors) {
-        selectorCollections = document.querySelectorAll(selector);
+        const elements = document.querySelectorAll(selector);
+        selectorCollections.push(...elements); // 展开 NodeList 并加入数组
     }
 
     selectorCollections.forEach(selector => {
@@ -31,14 +32,14 @@ function collectInfoForPanel() {
     let matches = {};
 
     const keywords = {
-        company: ["companyName"],
-        position: ['JobInfoHeader'],
-        companyDesc: ["jobsearch-JobComponent-description"],
+        company: ["companyName", "job-details-jobs-unified-top-card__company-name", "header-style__JobViewHeaderCompanyName"],
+        position: ['jobsearch-JobInfoHeader-title', "job-details-jobs-unified-top-card__job-title", "jobTitle"],
+        companyDesc: ["jobsearch-JobComponent-description", "jobs-description__content", "DescriptionContainerOuter"],
     };
 
     const selectors = {
-        company: ["div"],
-        position: ["h2"],
+        company: ["div", "li"],
+        position: ["h2", "div"],
         companyDesc: ["div"],
     };
 

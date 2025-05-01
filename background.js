@@ -24,8 +24,8 @@ chrome.webRequest.onCompleted.addListener((details) => {
     {
         urls: [
             "*://ca.indeed.com/*",
-            "*://www.linkedin.com/*",
-            "*://www.monster.ca/*",
+            "*://www.linkedin.com/voyager/api/jobs/*",
+            "*://api.monster.io/*",
         ], // 你可以匹配更具体的路径
     }
 );
