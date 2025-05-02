@@ -4,7 +4,6 @@ function findTargetElements(key, selectors, keywords) {
 
     for (let selector of selectors) {
         const elements = document.querySelectorAll(selector);
-        console.log(elements);
         selectorCollections.push(...elements); // 展开 NodeList 并加入数组
     }
 
