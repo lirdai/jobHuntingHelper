@@ -4,54 +4,30 @@
 <head>
     <style>
         #my-extension-panel {
-            width: 100%;
+            width: calc(100% - 16px);
             height: 100%;
             background: #ffffff;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             z-index: 9999;
-            padding: 25px;
             overflow-y: auto;
             font-family: Metropolis, Proxima Nova, Helvetica, Arial, sans-serif;
             border-radius: 10px;
+            padding: 12px;
         }
 
         #title {
             margin-bottom: 30px;
         }
 
-        #closePanel {
-            font-size: 30px;
-            color: red;
-            font-weight: bold;
-            border: 0;
-            border-radius: 5px;
-            padding: 10px 20px;
-            background-color: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        #closePanel:hover {
-            background-color: #ffe6e6;
-        }
-
-        #closePanel:focus {
-            outline: none;
-            box-shadow: 0 0 5px rgba(255, 0, 0, 0.5);
-        }
-
-        #closePanel:active {
-            background-color: #ffcccc;
-            transform: scale(0.98);
-        }
-
+        #fileInput,
         #company,
         #position,
         #companyDesc {
-            width: 90%;
+            display: block;
             border-radius: 6px;
-            margin-top: 5px;
-            margin-bottom: 30px;
+            width: calc(100% - 24px);
+            margin-bottom: 12px;
+            border: 1px solid #15151566;
         }
 
         #company,
@@ -68,7 +44,7 @@
             display: block;
             margin-top: 15px;
             margin-bottom: 15px;
-            margin-left: auto;
+            float: right;
             font-size: 30px;
             color: green;
             font-weight: bold;
