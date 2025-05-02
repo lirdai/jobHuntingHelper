@@ -1,97 +1,99 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <style>
-            #my-extension-panel {
-                width: calc(100% - 16px);
-                height: 100%;
-                background: #ffffff;
-                box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-                z-index: 9999;
-                overflow-y: auto;
-                font-family: Metropolis, Proxima Nova, Helvetica, Arial, sans-serif;
-                border-radius: 10px;
-                padding: 12px;
-            }
 
-            #title {
-                margin-bottom: 30px;
-            }
+<head>
+    <style>
+        #my-extension-panel {
+            width: calc(100% - 16px);
+            height: 100%;
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            overflow-y: auto;
+            font-family: Metropolis, Proxima Nova, Helvetica, Arial, sans-serif;
+            border-radius: 10px;
+            padding: 12px;
+        }
 
-            #fileInput,
-            #company,
-            #position,
-            #companyDesc {
-                display: block;
-                border-radius: 6px;
-                width: calc(100% - 24px);
-                margin-bottom: 12px;
-                border: 1px solid #15151566;
-            }
+        #title {
+            margin-bottom: 30px;
+        }
 
-            #company,
-            #position {
-                height: 50px;
-            }
+        #fileInput,
+        #company,
+        #position,
+        #companyDesc {
+            display: block;
+            border-radius: 6px;
+            width: calc(100% - 24px);
+            margin-bottom: 12px;
+            border: 1px solid #15151566;
+        }
 
-            #companyDesc {
-                height: 250px;
-                resize: none;
-            }
+        #company,
+        #position {
+            height: 50px;
+        }
 
-            #createResume {
-                display: block;
-                margin-top: 15px;
-                margin-bottom: 15px;
-                float: right;
-                font-size: 30px;
-                color: green;
-                font-weight: bold;
-                border: 0;
-                border-radius: 5px;
-                padding: 10px 20px;
-                background-color: white;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
+        #companyDesc {
+            height: 250px;
+            resize: none;
+        }
 
-            #createResume:hover {
-                background-color: #e6ffe6;
-                border-color: darkgreen;
-            }
+        #createResume {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 15px;
+            float: right;
+            font-size: 30px;
+            color: green;
+            font-weight: bold;
+            border: 0;
+            border-radius: 5px;
+            padding: 10px 20px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
 
-            #createResume:focus {
-                outline: none;
-                box-shadow: 0 0 5px rgba(0, 128, 0, 0.5);
-            }
+        #createResume:hover {
+            background-color: #e6ffe6;
+            border-color: darkgreen;
+        }
 
-            #createResume:active {
-                background-color: #ccffcc;
-                transform: scale(0.98);
-            }
-        </style>
-    </head>
+        #createResume:focus {
+            outline: none;
+            box-shadow: 0 0 5px rgba(0, 128, 0, 0.5);
+        }
 
-    <body>
-        <div id="my-extension-panel">
-            <h3 id="title">Fill in the information</h3>
+        #createResume:active {
+            background-color: #ccffcc;
+            transform: scale(0.98);
+        }
+    </style>
+</head>
 
-            <input type="file" id="fileInput" accept=".pdf,.docx" />
-            <pre id="output"></pre>
+<body>
+    <div id="my-extension-panel">
+        <h3 id="title">Fill in the information</h3>
 
-            <label>Company</label>
-            <input type="text" id="company" />
+        <input type="file" id="fileInput" accept=".pdf,.docx" />
+        <pre id="output"></pre>
 
-            <label>Position</label>
-            <input type="text" id="position" />
+        <label>Company</label>
+        <input type="text" id="company" />
 
-            <label>Company Description</label>
-            <textarea id="companyDesc"></textarea>
+        <label>Position</label>
+        <input type="text" id="position" />
 
-            <button id="createResume">&#10004;</button>
-        </div>
-    </body>
+        <label>Company Description</label>
+        <textarea id="companyDesc"></textarea>
 
-    <script src="pdfjs/pdf.mjs" type="module"></script>
-    <script src="sidePanel.js"></script>
+        <button id="createResume">&#10004;</button>
+    </div>
+</body>
+
+<script src="pdfjs/pdf.mjs" type="module"></script>
+<script src="sidePanel.js"></script>
+
 </html>
