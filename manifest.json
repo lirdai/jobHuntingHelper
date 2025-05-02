@@ -33,6 +33,7 @@
             ],
             "resources": [
                 "pdfjs/*.mjs",
+                "libs/mammoth.browser.min.js",
                 "sidePanel.js"
             ]
         }

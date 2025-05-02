@@ -35,12 +35,23 @@ document
         const fullText = texts
           .map((text) => text.items.map((t) => t.str).join("\n"))
           .join("\n");
+
         console.log("fullText", fullText);
       };
 
       reader.readAsArrayBuffer(file);
     } else if (file.name.endsWith(".docx")) {
-      console.log("");
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const arrayBuffer = event.target.result;
+
+        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+        const fullText = result.value;
+
+        console.log("fullText", fullText);
+      };
+
+      reader.readAsArrayBuffer(file);
     }
   });
 
