@@ -32,7 +32,7 @@
                 "<all_urls>"
             ],
             "resources": [
-                "pdfjs/*.mjs",
+                "libs/*.mjs",
                 "libs/mammoth.browser.min.js",
                 "sidePanel.js"
             ]

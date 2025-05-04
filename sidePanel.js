@@ -59,7 +59,7 @@ document
     console.log(file);
 
     if (file.name.endsWith(".pdf")) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = "pdfjs/pdf.worker.mjs";
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "libs/pdf.worker.mjs";
       pdfjsLib.getDocument(file);
 
       const reader = new FileReader();
