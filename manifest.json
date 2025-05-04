@@ -33,6 +33,7 @@
             ],
             "resources": [
                 "libs/*.mjs",
+                "libs/*.cjs",
                 "libs/mammoth.browser.min.js",
                 "sidePanel.js"
             ]

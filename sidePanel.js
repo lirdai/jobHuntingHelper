@@ -1,6 +1,8 @@
-/*global pdfjsLib, mammoth */
+/*global pdfjsLib, mammoth, docx */
 let resume;
+let resumeDocx;
 let fonts = {};
+const { Document, Packer, Paragraph, TextRun } = docx;
 
 function generatePDF(data) {
   const { jsPDF } = window.jspdf;
@@ -24,6 +26,39 @@ function generatePDF(data) {
   doc.save("Resume.pdf");
 }
 
+const generateWord = async () => {
+  // 创建一个 Word 文档
+  const doc = new Document({
+    sections: [
+      {
+        properties: {},
+        children: [
+          new Paragraph({
+            children: [
+              new TextRun("Hello, world!"),
+              new TextRun({
+                text: " This is a Word document generated using docx library.",
+                bold: true,
+              }),
+            ],
+          }),
+        ],
+      },
+    ],
+  });
+
+  // 将文档打包并触发下载
+  Packer.toBlob(doc).then((blob) => {
+    console.log(blob);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "resume.docx";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+};
+
 document.getElementById("company").addEventListener("change", (e) => {
   console.log("Company field updated:", e.target.value);
 });
@@ -38,7 +73,8 @@ document.getElementById("companyDesc").addEventListener("change", (e) => {
 
 document.getElementById("createResume").addEventListener("click", (e) => {
   console.log("createResume", e.target.value);
-  generatePDF(resume);
+  // generatePDF(resume);
+  generateWord(resumeDocx);
 });
 
 const getFontStyle = (name) => {
@@ -105,6 +141,7 @@ document
         const fullText = result.value;
 
         console.log("fullText", fullText);
+        resumeDocx = fullText;
       };
 
       reader.readAsArrayBuffer(file);
