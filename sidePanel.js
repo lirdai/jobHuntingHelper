@@ -1,19 +1,14 @@
 /*global pdfjsLib, mammoth */
 let resume;
+let fonts = {};
 
 function generatePDF(data) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "pt" });
   const pdfHeight = 842;
 
-  const styles = Object.keys(data.styles).reduce((acc, key) => {
-    return {
-      ...acc,
-      [key]: data.styles[key].fontFamily,
-    };
-  }, {});
-
-  console.log(styles);
+  console.log(fonts);
+  console.log(doc.getFontList());
 
   data.items.forEach((item) => {
     const text = item.str;
@@ -22,7 +17,10 @@ function generatePDF(data) {
     const fontSize = item.height;
 
     doc.setFontSize(fontSize);
-    doc.setFont("times");
+    let fontName = fonts[item.fontName].name,
+      fontStyle = fonts[item.fontName].style;
+    fontName = fontName.substring(fontName.indexOf("+") + 1);
+    doc.setFont(fontName, fontStyle);
     doc.text(text, x, y);
   });
 
@@ -46,6 +44,13 @@ document.getElementById("createResume").addEventListener("click", (e) => {
   generatePDF(resume);
 });
 
+const getFontStyle = (name) => {
+  if (!name) return "normal";
+  if (name.toLowerCase().includes("bold")) return "bold";
+  if (name.toLowerCase().includes("italic")) return "italic";
+  return "normal";
+};
+
 document
   .getElementById("fileInput")
   .addEventListener("change", async (event) => {
@@ -62,8 +67,6 @@ document
         const typedarray = new Uint8Array(reader.result);
         const pdf = await pdfjsLib.getDocument({
           data: typedarray,
-          disableFontFace: false,
-          fontExtraProperties: true,
         }).promise;
         const pages = await Promise.all(
           Array.from(Array(pdf.numPages)).map((_, i) => pdf.getPage(i + 1)),
@@ -76,6 +79,19 @@ document
         );
 
         console.log("texts", texts);
+
+        const opList = await pages[0].getOperatorList();
+        opList.argsArray.forEach((args, idx) => {
+          if (opList.fnArray[idx] === pdfjsLib.OPS.setFont) {
+            const [fontRef] = args;
+            const fontObj = pages[0].commonObjs.get(fontRef);
+            fonts[fontObj.loadedName] = {
+              ...fontObj,
+              style: getFontStyle(fontObj.name),
+            };
+          }
+        });
+        console.log("fonts", fonts);
 
         const fullText = texts
           .map((text) => text.items.map((t) => t.str).join("\n"))
