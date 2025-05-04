@@ -4,11 +4,8 @@ let fonts = {};
 
 function generatePDF(data) {
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit: "pt" });
+  const doc = new jsPDF({ unit: "pt", putOnlyUsedFonts: true, compress: true });
   const pdfHeight = 842;
-
-  console.log(fonts);
-  console.log(doc.getFontList());
 
   data.items.forEach((item) => {
     const text = item.str;
@@ -72,13 +69,9 @@ document
           Array.from(Array(pdf.numPages)).map((_, i) => pdf.getPage(i + 1)),
         );
 
-        console.log("pages", pages);
-
         const texts = await Promise.all(
           pages.map((page) => page.getTextContent()),
         );
-
-        console.log("texts", texts);
 
         const opList = await pages[0].getOperatorList();
         opList.argsArray.forEach((args, idx) => {
@@ -91,7 +84,6 @@ document
             };
           }
         });
-        console.log("fonts", fonts);
 
         const fullText = texts
           .map((text) => text.items.map((t) => t.str).join("\n"))
