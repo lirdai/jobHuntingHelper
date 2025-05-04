@@ -1,4 +1,34 @@
-/*global pdfjsLib */
+/*global pdfjsLib, mammoth */
+let resume;
+
+function generatePDF(data) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt" });
+  const pdfHeight = 842;
+
+  const styles = Object.keys(data.styles).reduce((acc, key) => {
+    return {
+      ...acc,
+      [key]: data.styles[key].fontFamily,
+    };
+  }, {});
+
+  console.log(styles);
+
+  data.items.forEach((item) => {
+    const text = item.str;
+    const x = item.transform[4];
+    const y = pdfHeight - item.transform[5];
+    const fontSize = item.height;
+
+    doc.setFontSize(fontSize);
+    doc.setFont("times");
+    doc.text(text, x, y);
+  });
+
+  doc.save("Resume.pdf");
+}
+
 document.getElementById("company").addEventListener("change", (e) => {
   console.log("Company field updated:", e.target.value);
 });
@@ -9,6 +39,11 @@ document.getElementById("position").addEventListener("change", (e) => {
 
 document.getElementById("companyDesc").addEventListener("change", (e) => {
   console.log("Company description updated:", e.target.value);
+});
+
+document.getElementById("createResume").addEventListener("click", (e) => {
+  console.log("createResume", e.target.value);
+  generatePDF(resume);
 });
 
 document
@@ -25,18 +60,29 @@ document
       const reader = new FileReader();
       reader.onload = async () => {
         const typedarray = new Uint8Array(reader.result);
-        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+        const pdf = await pdfjsLib.getDocument({
+          data: typedarray,
+          disableFontFace: false,
+          fontExtraProperties: true,
+        }).promise;
         const pages = await Promise.all(
           Array.from(Array(pdf.numPages)).map((_, i) => pdf.getPage(i + 1)),
         );
+
+        console.log("pages", pages);
+
         const texts = await Promise.all(
           pages.map((page) => page.getTextContent()),
         );
+
+        console.log("texts", texts);
+
         const fullText = texts
           .map((text) => text.items.map((t) => t.str).join("\n"))
           .join("\n");
 
         console.log("fullText", fullText);
+        resume = texts[0];
       };
 
       reader.readAsArrayBuffer(file);
@@ -45,7 +91,9 @@ document
       reader.onload = async (event) => {
         const arrayBuffer = event.target.result;
 
-        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+        const result = await mammoth.extractRawText({
+          arrayBuffer: arrayBuffer,
+        });
         const fullText = result.value;
 
         console.log("fullText", fullText);
