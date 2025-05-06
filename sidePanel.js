@@ -100,7 +100,10 @@ async function generateDocx(data) {
               style: tag,
             });
           }
-          return new TextRun(node.textContent);
+          return new TextRun({
+            text: node.textContent,
+            style: "normal",
+          });
         }
       }
     }
