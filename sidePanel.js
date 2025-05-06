@@ -20,6 +20,7 @@ function generatePDF(data) {
     let fontName = fonts[item.fontName].name,
       fontStyle = fonts[item.fontName].style;
     fontName = fontName.substring(fontName.indexOf("+") + 1);
+    console.log(fontName, fontStyle);
     doc.setFont(fontName, fontStyle);
     doc.text(text, x, y);
   });
@@ -35,91 +36,71 @@ async function generateDocx(data) {
   const body = doc.body;
 
   const paragraphs = [];
+  const sizeMap = {
+    1: 48, // h1
+    2: 40,
+    3: 32,
+    4: 26,
+    5: 26,
+    6: 18,
+  };
 
+  function createChildren(node) {
+    return Array.from(node.childNodes)
+      .filter((child) => !!child)
+      .map((child) => parseNode(child));
+  }
   function parseNode(node) {
     if (node.nodeType === Node.TEXT_NODE) {
-      return new TextRun(node.textContent);
+      return new TextRun({
+        text: node.textContent,
+        style: "normal",
+      });
     }
 
     if (node.nodeType === Node.ELEMENT_NODE) {
       switch (node.tagName.toLowerCase()) {
+        case "strong":
+          return new TextRun({
+            text: node.textContent,
+            style: "strong",
+          });
         case "p":
           return new Paragraph({
-            children: [
-              new TextRun({
-                text: node.textContent,
-                size: 26,
-                font: "Arabic", // 设置字体为 Arabic
-              }),
-            ],
-            spacing: {
-              line: 260,
-            },
+            children: createChildren(node),
+            style: "p",
           });
         case "li":
           return new Paragraph({
-            children: [
-              new TextRun({
-                text: node.textContent,
-                size: 26, // 设置字体大小为 26
-                font: "Arabic", // 设置字体为 Arabic
-              }),
-            ],
-            bullet: { level: 0 }, // 设置为无序列表
-            spacing: {
-              line: 260, // 设置行间距
-            },
+            children: createChildren(node),
+            style: "p",
           });
         case "ul":
         case "ol":
           return Array.from(node.children)
+            .filter((child) => !!child)
             .map((child) => {
               // 确保每个列表项的字体大小都是 26
               return new Paragraph({
-                children: [
-                  new TextRun({
-                    text: child.textContent,
-                    size: 26, // 设置字体大小为 26
-                    font: "Arabic", // 设置字体为 Arabic
-                  }),
-                ],
+                children: createChildren(child),
+                style: "p",
                 bullet: { level: 0 }, // 无序列表
                 numbering: { reference: "numbering", level: 0 }, // 有序列表
-                spacing: {
-                  line: 260, // 设置行间距
-                },
               });
-            })
-            .flat();
+            });
         default: {
           const tag = node.tagName.toLowerCase();
-          const level = parseInt(tag[1]);
-          const sizeMap = {
-            1: 48, // h1
-            2: 40,
-            3: 32,
-            4: 26,
-            5: 26,
-            6: 18,
-          };
-
           if (/^h[1-6]$/.test(tag)) {
             return new Paragraph({
               children: [
                 new TextRun({
                   text: node.textContent,
-                  bold: true,
-                  size: sizeMap[level],
-                  font: "Arabic", // 设置字体为 Arabic
                 }),
               ],
-              spacing: {
-                line: 260, // 设置行间距
-              },
-              alignment: AlignmentType.JUSTIFIED, // <- 设置两端对齐
+              style: tag,
             });
           }
-          break;
+          return new TextRun(node.textContent);
         }
       }
     }
@@ -127,23 +108,112 @@ async function generateDocx(data) {
     return null;
   }
 
+  let i = 0;
   for (let child of body.children) {
+    if (i === 2 || i === 3 || i === 5) console.log("child", child);
+
     const parsed = parseNode(child);
     if (Array.isArray(parsed)) {
       paragraphs.push(...parsed);
     } else if (parsed) {
       paragraphs.push(parsed);
     }
+    i++;
   }
+  console.log("paragraphs", paragraphs);
 
+  const fontUrl = chrome.runtime.getURL("fonts/Arial.ttf");
+  const response = await fetch(fontUrl);
+  const font = new Uint8Array(await response.arrayBuffer());
   const docxFile = new Document({
+    compatabilityModeVersion: 17,
     sections: [
       {
         properties: {},
         children: paragraphs,
       },
     ],
+    styles: {
+      default: {
+        document: {
+          run: {
+            // font: "Times New Roman",
+          },
+        },
+      },
+      characterStyles: [
+        {
+          id: "normal",
+          run: {
+            size: 24,
+          },
+        },
+        {
+          id: "strong",
+          run: {
+            size: 24,
+            bold: true,
+          },
+        },
+      ],
+      paragraphStyles: [
+        {
+          id: "p",
+          paragraph: {
+            spacing: {
+              before: 0,
+              after: 0,
+            },
+          },
+        },
+        {
+          id: "h1",
+          paragraph: {
+            alignment: AlignmentType.CENTER,
+            spacing: {
+              before: 200,
+              after: 100,
+            },
+          },
+          run: {
+            size: sizeMap[1],
+            bold: true,
+          },
+        },
+        {
+          id: "h2",
+          paragraph: {
+            alignment: AlignmentType.CENTER,
+            spacing: {
+              before: 200,
+              after: 100,
+            },
+          },
+          run: {
+            size: sizeMap[2],
+            bold: true,
+          },
+        },
+        {
+          id: "h3",
+          paragraph: {
+            spacing: {
+              before: 200,
+              after: 100,
+            },
+          },
+          run: {
+            size: sizeMap[3],
+            bold: true,
+            font: "Arial",
+          },
+        },
+      ],
+    },
+    // fonts: [{ name: "Pacifico", data: font, characterSet: CharacterSet.ANSI }],
   });
+
+  console.log("Packer", docxFile);
 
   const blob = await Packer.toBlob(docxFile);
 

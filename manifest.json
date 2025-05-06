@@ -32,6 +32,7 @@
                 "<all_urls>"
             ],
             "resources": [
+                "fonts/*.ttf",
                 "libs/*.mjs",
                 "libs/*.cjs",
                 "libs/mammoth.browser.min.js",
