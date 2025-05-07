@@ -4,7 +4,7 @@ function findTargetElements(key, selectors, keywords) {
 
   for (let selector of selectors) {
     const elements = document.querySelectorAll(selector);
-    selectorCollections.push(...elements); // 展开 NodeList 并加入数组
+    selectorCollections.push(...elements);
   }
 
   selectorCollections.forEach((selector) => {
@@ -19,7 +19,7 @@ function findTargetElements(key, selectors, keywords) {
           dataTestId,
           innerText: selector.innerText,
         };
-        break; // 找到一个匹配关键词就跳出当前div检查
+        break;
       }
     }
   });

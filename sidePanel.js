@@ -255,6 +255,74 @@ const getFontStyle = (name) => {
   return "normal";
 };
 
+const pdfRenderPage = (url) => {
+  var pdfDoc = null,
+    pageNum = 1,
+    pageRendering = false,
+    pageNumPending = null,
+    scale = 0.8,
+    canvas = document.getElementById("the-canvas"),
+    ctx = canvas.getContext("2d");
+
+  function renderPage(num) {
+    pageRendering = true;
+    pdfDoc.getPage(num).then(function (page) {
+      var viewport = page.getViewport({ scale: scale });
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      var renderContext = {
+        canvasContext: ctx,
+        viewport: viewport,
+      };
+      var renderTask = page.render(renderContext);
+
+      renderTask.promise.then(function () {
+        pageRendering = false;
+        if (pageNumPending !== null) {
+          renderPage(pageNumPending);
+          pageNumPending = null;
+        }
+      });
+    });
+
+    document.getElementById("page_num").textContent = num;
+  }
+
+  function queueRenderPage(num) {
+    if (pageRendering) {
+      pageNumPending = num;
+    } else {
+      renderPage(num);
+    }
+  }
+
+  function onPrevPage() {
+    if (pageNum <= 1) {
+      return;
+    }
+    pageNum--;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById("prev").addEventListener("click", onPrevPage);
+
+  function onNextPage() {
+    if (pageNum >= pdfDoc.numPages) {
+      return;
+    }
+    pageNum++;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById("next").addEventListener("click", onNextPage);
+
+  pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
+    pdfDoc = pdfDoc_;
+    document.getElementById("page_count").textContent = pdfDoc.numPages;
+
+    renderPage(pageNum);
+  });
+};
+
 document
   .getElementById("fileInput")
   .addEventListener("change", async (event) => {
@@ -266,6 +334,7 @@ document
     if (fileName.endsWith(".pdf")) {
       pdfjsLib.GlobalWorkerOptions.workerSrc = "libs/pdf.worker.mjs";
       pdfjsLib.getDocument(file);
+      pdfRenderPage(URL.createObjectURL(file));
 
       const reader = new FileReader();
       reader.onload = async () => {
@@ -362,17 +431,45 @@ chrome.runtime.onMessage.addListener((message) => {
 document.addEventListener("DOMContentLoaded", () => {
   const tabs = document.querySelectorAll(".tab");
   const contents = document.querySelectorAll(".tab-content");
+  const forwardButtons = document.querySelectorAll(".icon_button");
 
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      // 移除所有active
-      tabs.forEach((t) => t.classList.remove("active"));
-      contents.forEach((c) => c.classList.remove("active"));
+  function activateTab(index) {
+    tabs.forEach((t) => t.classList.remove("active"));
+    contents.forEach((c) => c.classList.remove("active"));
 
-      // 设置当前为active
-      tab.classList.add("active");
-      const target = tab.getAttribute("data-tab");
-      document.getElementById(target).classList.add("active");
+    tabs[index].classList.add("active");
+    contents[index].classList.add("active");
+  }
+
+  tabs.forEach((tab, idx) => {
+    tab.addEventListener("click", () => activateTab(idx));
+  });
+
+  forwardButtons.forEach((forwardButton) => {
+    forwardButton.addEventListener("click", () => {
+      const currentIndex = [...tabs].findIndex((tab) =>
+        tab.classList.contains("active"),
+      );
+
+      const nextIndex = (currentIndex + 1) % tabs.length;
+      activateTab(nextIndex);
     });
   });
+});
+
+document.getElementById("fileInput").addEventListener("change", function () {
+  const reader = new FileReader();
+  reader.onload = function (event) {
+    const arrayBuffer = event.target.result;
+
+    mammoth
+      .convertToHtml({ arrayBuffer: arrayBuffer })
+      .then(function (result) {
+        document.getElementById("output").innerHTML = result.value;
+      })
+      .catch(function (err) {
+        console.error("Mammoth conversion error:", err);
+      });
+  };
+  reader.readAsArrayBuffer(this.files[0]);
 });

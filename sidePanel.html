@@ -15,6 +15,16 @@
             padding: 12px;
         }
 
+        #the-canvas {
+            width: 100%;
+            height: 100%;
+        }
+
+        #output {
+
+            white-space: pre-wrap;
+        }
+
         #title {
             margin-bottom: 30px;
         }
@@ -22,7 +32,9 @@
         #fileInput,
         #company,
         #position,
-        #companyDesc {
+        #companyDesc,
+        #aikey,
+        #additionalInfo {
             display: block;
             border-radius: 6px;
             width: calc(100% - 24px);
@@ -31,16 +43,19 @@
         }
 
         #company,
-        #position {
+        #position,
+        #aikey {
             height: 50px;
         }
 
-        #companyDesc {
+        #companyDesc,
+        #additionalInfo {
             height: 250px;
             resize: none;
         }
 
-        #createResume {
+        #createResume,
+        #forwardButton {
             display: block;
             margin-top: 15px;
             margin-bottom: 15px;
@@ -56,17 +71,20 @@
             transition: all 0.2s ease;
         }
 
-        #createResume:hover {
+        #createResume:hover,
+        #forwardButton:hover {
             background-color: #e6ffe6;
             border-color: darkgreen;
         }
 
-        #createResume:focus {
+        #createResume:focus,
+        #forwardButton:focus {
             outline: none;
             box-shadow: 0 0 5px rgba(0, 128, 0, 0.5);
         }
 
-        #createResume:active {
+        #createResume:active,
+        #forwardButton:active {
             background-color: #ccffcc;
             transform: scale(0.98);
         }
@@ -100,9 +118,12 @@
 
         .tab-content {
             display: none;
-            padding-left: 10px;
-            padding-right: 10px;
+            padding-top: 10px;
             background-color: white;
+
+            max-width: 100%;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
 
         .tab-content.active {
@@ -120,10 +141,24 @@
         </div>
 
         <div id="tab1" class="tab-content active">
-            <h3 id="title">Fill in the information</h3>
-
             <input type="file" id="fileInput" accept=".pdf,.docx" />
             <pre id="output">Accepted file types: .pdf, .docx</pre>
+
+            <div>
+                <button id="prev">Previous</button>
+                <button id="next">Next</button>
+                &nbsp; &nbsp;
+                <span>Page: <span id="page_num"></span> / <span id="page_count"></span></span>
+            </div>
+
+            <canvas id="the-canvas"></canvas>
+            <div id="output"></div>
+
+            <button id="forwardButton" class="icon_button">&#10148;</button>
+        </div>
+
+        <div id="tab2" class="tab-content">
+            <h3 id="title">Job Information</h3>
 
             <label>Company</label>
             <input type="text" id="company" />
@@ -133,19 +168,28 @@
 
             <label>Company Description</label>
             <textarea id="companyDesc"></textarea>
+
+            <button id="forwardButton" class="icon_button">&#10148;</button>
         </div>
 
-        <div id="tab2" class="tab-content"></div>
-        <div id="tab3" class="tab-content"></div>
+        <div id="tab3" class="tab-content">
+            <h3 id="title">Additional Information</h3>
 
-        <button id="createResume">&#10004;</button>
+            <label>ChatGPT Key</label>
+            <input type="text" id="aikey" />
+
+            <label>Additional Information</label>
+            <textarea id="additionalInfo"></textarea>
+
+            <button id="createResume" class="icon_button">&#10004;</button>
+        </div>
     </div>
 </body>
 
 <script src="libs/pdf.mjs" type="module"></script>
+<script src="libs/docx.umd.cjs"></script>
 <script src="libs/mammoth.browser.min.js" type="module"></script>
 <script src="libs/jspdf.umd.min.js" type="module"></script>
-<script src="libs/docx.umd.cjs"></script>
 <script src="fonts/Arial-normal.js" type="module"></script>
 <script src="fonts/ArialBold-bold.js" type="module"></script>
 <script src="fonts/TimesNewRoman-normal.js" type="module"></script>
