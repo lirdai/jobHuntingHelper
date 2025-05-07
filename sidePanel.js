@@ -125,9 +125,9 @@ async function generateDocx(data) {
   }
   console.log("paragraphs", paragraphs);
 
-  const fontUrl = chrome.runtime.getURL("fonts/Arial.ttf");
-  const response = await fetch(fontUrl);
-  const font = new Uint8Array(await response.arrayBuffer());
+  // const fontUrl = chrome.runtime.getURL("fonts/Arial.ttf");
+  // const response = await fetch(fontUrl);
+  // const font = new Uint8Array(await response.arrayBuffer());
   const docxFile = new Document({
     compatabilityModeVersion: 17,
     sections: [
@@ -357,4 +357,22 @@ chrome.runtime.onMessage.addListener((message) => {
       );
     });
   }
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const tabs = document.querySelectorAll(".tab");
+  const contents = document.querySelectorAll(".tab-content");
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      // 移除所有active
+      tabs.forEach((t) => t.classList.remove("active"));
+      contents.forEach((c) => c.classList.remove("active"));
+
+      // 设置当前为active
+      tab.classList.add("active");
+      const target = tab.getAttribute("data-tab");
+      document.getElementById(target).classList.add("active");
+    });
+  });
 });

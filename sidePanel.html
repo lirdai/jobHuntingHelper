@@ -70,24 +70,73 @@
             background-color: #ccffcc;
             transform: scale(0.98);
         }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            background-color: #e4e4e4;
+            border-radius: 10px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            border: 1px solid transparent;
+            border-radius: 10px 10px 0 0;
+            background-color: transparent;
+            cursor: pointer;
+            transition: background-color 0.2s ease, border 0.2s ease;
+        }
+
+        .tab:hover {
+            background-color: #ccc;
+        }
+
+        .tab.active {
+            background-color: #ffffff;
+            border: 1px solid #ccc;
+            border-bottom: 1px solid white;
+            z-index: 2;
+        }
+
+        .tab-content {
+            display: none;
+            padding-left: 10px;
+            padding-right: 10px;
+            background-color: white;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 
 <body>
     <div id="my-extension-panel">
-        <h3 id="title">Fill in the information</h3>
+        <div class="tabs">
+            <div class="tab active" data-tab="tab1">Tab 1</div>
+            <div class="tab" data-tab="tab2">Tab 2</div>
+            <div class="tab" data-tab="tab3">Tab 3</div>
+        </div>
 
-        <input type="file" id="fileInput" accept=".pdf,.docx" />
-        <pre id="output">Accepted file types: .pdf, .docx</pre>
+        <div id="tab1" class="tab-content active">
+            <h3 id="title">Fill in the information</h3>
 
-        <label>Company</label>
-        <input type="text" id="company" />
+            <input type="file" id="fileInput" accept=".pdf,.docx" />
+            <pre id="output">Accepted file types: .pdf, .docx</pre>
 
-        <label>Position</label>
-        <input type="text" id="position" />
+            <label>Company</label>
+            <input type="text" id="company" />
 
-        <label>Company Description</label>
-        <textarea id="companyDesc"></textarea>
+            <label>Position</label>
+            <input type="text" id="position" />
+
+            <label>Company Description</label>
+            <textarea id="companyDesc"></textarea>
+        </div>
+
+        <div id="tab2" class="tab-content"></div>
+        <div id="tab3" class="tab-content"></div>
 
         <button id="createResume">&#10004;</button>
     </div>
