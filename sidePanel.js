@@ -323,6 +323,26 @@ const pdfRenderPage = (url) => {
   });
 };
 
+document.getElementById("fileInput").addEventListener("click", () => {
+  const fileInput = document.getElementById("fileInput");
+  fileInput.value = "";
+
+  const output = document.getElementById("output");
+  output.innerHTML = "";
+  output.removeAttribute("class");
+
+  const canvas = document.getElementById("the-canvas");
+  const ctx = canvas.getContext("2d");
+
+  const width = canvas.width;
+  const height = canvas.height;
+
+  ctx.clearRect(0, 0, width, height);
+
+  canvas.width = 0;
+  canvas.height = 0;
+});
+
 document
   .getElementById("fileInput")
   .addEventListener("change", async (event) => {
@@ -472,4 +492,16 @@ document.getElementById("fileInput").addEventListener("change", function () {
       });
   };
   reader.readAsArrayBuffer(this.files[0]);
+});
+
+document.getElementById("fileInput").addEventListener("change", (event) => {
+  console.log(file.name.toLowerCase());
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.name.toLowerCase().endsWith(".pdf")) {
+    document.getElementById("controls").style.display = "block";
+  } else {
+    document.getElementById("controls").style.display = "none";
+  }
 });

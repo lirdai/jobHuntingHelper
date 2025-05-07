@@ -21,8 +21,12 @@
         }
 
         #output {
-
             white-space: pre-wrap;
+            font-size: 20%;
+        }
+
+        #controls {
+            display: none;
         }
 
         #title {
@@ -142,9 +146,9 @@
 
         <div id="tab1" class="tab-content active">
             <input type="file" id="fileInput" accept=".pdf,.docx" />
-            <pre id="output">Accepted file types: .pdf, .docx</pre>
+            <pre>Accepted file types: .pdf, .docx</pre>
 
-            <div>
+            <div id="controls">
                 <button id="prev">Previous</button>
                 <button id="next">Next</button>
                 &nbsp; &nbsp;
