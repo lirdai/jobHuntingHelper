@@ -80,12 +80,11 @@ async function generateDocx(data) {
           return Array.from(node.children)
             .filter((child) => !!child)
             .map((child) => {
-              // 确保每个列表项的字体大小都是 26
               return new Paragraph({
                 children: createChildren(child),
                 style: "p",
-                bullet: { level: 0 }, // 无序列表
-                numbering: { reference: "numbering", level: 0 }, // 有序列表
+                bullet: { level: 0 }, 
+                numbering: { reference: "numbering", level: 0 }, 
               });
             });
         default: {
@@ -220,33 +219,11 @@ async function generateDocx(data) {
 
   const blob = await Packer.toBlob(docxFile);
 
-  // 下载文件
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "resume.docx";
   a.click();
 }
-
-document.getElementById("company").addEventListener("change", (e) => {
-  console.log("Company field updated:", e.target.value);
-});
-
-document.getElementById("position").addEventListener("change", (e) => {
-  console.log("Position field updated:", e.target.value);
-});
-
-document.getElementById("companyDesc").addEventListener("change", (e) => {
-  console.log("Company description updated:", e.target.value);
-});
-
-document.getElementById("createResume").addEventListener("click", (e) => {
-  console.log("createResume", e.target.value);
-  if (fileName.endsWith(".pdf")) {
-    generatePDF(resume);
-  } else if (fileName.endsWith(".docx")) {
-    generateDocx(resumeDocx);
-  }
-});
 
 const getFontStyle = (name) => {
   if (!name) return "normal";
@@ -322,6 +299,174 @@ const pdfRenderPage = (url) => {
     renderPage(pageNum);
   });
 };
+
+function updateSidePanel(matches) {
+  if (!document.getElementById("my-extension-panel")) {
+    return;
+  }
+
+  document.getElementById("company").value = matches?.company?.innerText || "";
+  document.getElementById("position").value =
+    matches?.position?.innerText || "";
+  document.getElementById("companyDesc").value =
+    matches?.companyDesc?.innerText || "";
+}
+
+chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+  chrome.tabs.sendMessage(
+    tabs[0].id,
+    { action: "request job info" },
+    (matches) => {
+      updateSidePanel(matches);
+    },
+  );
+});
+
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === "Job API Completed") {
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+      chrome.tabs.sendMessage(
+        tabs[0].id,
+        { action: "request job info" },
+        (matches) => {
+          updateSidePanel(matches);
+        },
+      );
+    });
+  }
+});
+
+document.getElementById("company").addEventListener("change", (e) => {
+  console.log("Company field updated:", e.target.value);
+  const company = document.getElementById("company");
+  if (e.target.value === "") {
+    company.style.border = "1px solid #DC143C";
+  } else {
+    company.style.border = "1px solid #000";
+  }
+});
+
+document.getElementById("position").addEventListener("change", (e) => {
+  console.log("Position field updated:", e.target.value);
+  const position = document.getElementById("position");
+  if (e.target.value === "") {
+    position.style.border = "1px solid #DC143C";
+  } else {
+    position.style.border = "1px solid #000";
+  }
+});
+
+document.getElementById("companyDesc").addEventListener("change", (e) => {
+  console.log("Company description updated:", e.target.value);
+  const companyDesc = document.getElementById("companyDesc");
+  if (e.target.value === "") {
+    companyDesc.style.border = "1px solid #DC143C";
+  } else {
+    companyDesc.style.border = "1px solid #000";
+  }
+});
+
+document.getElementById("fileInput").addEventListener("change", (e) => {
+  const fileInput = document.getElementById("fileInput");
+  if (fileInput.value === "" || fileInput.value === null || fileInput.value === undefined) {
+    fileInput.style.border = "1px solid #DC143C";
+  } else {
+    fileInput.style.border = "1px solid #000";
+  }
+});
+
+document.getElementById("aikey").addEventListener("change", (e) => {
+  const aikey = document.getElementById("aikey");
+  if (e.target.value === "") {
+    aikey.style.border = "1px solid #DC143C";
+  } else {
+    aikey.style.border = "1px solid #000";
+  }
+});
+
+document.getElementById("createResume").addEventListener("click", async (e) => {
+  const savedMsg = document.getElementById("saved-msg");
+  const file = document.getElementById("fileInput");
+  const company = document.getElementById("company");
+  const position = document.getElementById("position");
+  const companyDesc = document.getElementById("companyDesc");
+  const key = document.getElementById("aikey");
+
+  const checkIfOk = file.value !== "" && file.value !== undefined && file.value !== null && company.value !== "" && position.value !== "" && companyDesc.value !== "" && key.value !== "";
+
+  if (checkIfOk) {
+    const keyCheck = key.value.trim();
+    console.log(key, key.value.trim());
+    if (!keyCheck.startsWith("sk-")) {
+      alert("Please enter a valid OpenAI API key (starting with 'sk-')");
+      return;
+    }
+
+    chrome.storage.local.get(["openaiKey"]).then((result) => {
+      if (result.openaiKey) return
+      else {
+        const confirmed = confirm("Would you like us to remember your OpenAI API key?");
+        if (confirmed) {
+          chrome.storage.local.set({ openaiKey: key.value }).then(() => {
+            savedMsg.style.display = "block";
+            setTimeout(() => {
+              savedMsg.style.display = "none";
+            }, 2000);
+          });
+        } else {
+          alert("OpenAI API key was not saved");
+        }
+      }
+    });
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${key.value}`,
+      },
+      body: JSON.stringify({
+        "model": "gpt-4.1",
+        "messages": [
+          {
+            "role": "user",
+            "content": "You are a helpful assistant."
+          },
+          {
+            "role": "user",
+            "content": "Hello!"
+          }
+        ]
+      }),
+    });
+  
+    const data = await response.json();
+    alert(data.choices?.[0]?.message?.content || "No response.");
+  
+    // if (fileName.endsWith(".pdf")) {
+    //   generatePDF(resume);
+    // } else if (fileName.endsWith(".docx")) {
+    //   generateDocx(resumeDocx);
+    // }
+  } else {
+    if (file.value === "" || file.value === undefined || file.value === null) {
+      file.style.border = "1px solid #DC143C";
+      alert("Please upload your resume");
+    } if (company.value === "") {
+      company.style.border = "1px solid #DC143C";
+      alert("Please provide the company name");
+    } if (position.value === "") {
+      position.style.border = "1px solid #DC143C";
+      alert("Please provide the job title");
+    } if (companyDesc.value === "") {
+      companyDesc.style.border = "1px solid #DC143C";
+      alert("Please provide a company introduction");
+    } else {
+      key.style.border = "1px solid #DC143C";
+      alert("Please enter your OpenAI API key");
+    }
+  }
+});
 
 document.getElementById("fileInput").addEventListener("click", () => {
   const fileInput = document.getElementById("fileInput");
@@ -412,40 +557,14 @@ document
     }
   });
 
-function updateSidePanel(matches) {
-  if (!document.getElementById("my-extension-panel")) {
-    return;
-  }
+document.addEventListener("DOMContentLoaded", () => {
+  const key = document.getElementById("aikey");
 
-  document.getElementById("company").value = matches?.company?.innerText || "";
-  document.getElementById("position").value =
-    matches?.position?.innerText || "";
-  document.getElementById("companyDesc").value =
-    matches?.companyDesc?.innerText || "";
-}
-
-chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-  chrome.tabs.sendMessage(
-    tabs[0].id,
-    { action: "request job info" },
-    (matches) => {
-      updateSidePanel(matches);
-    },
-  );
-});
-
-chrome.runtime.onMessage.addListener((message) => {
-  if (message.action === "Job API Completed") {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      chrome.tabs.sendMessage(
-        tabs[0].id,
-        { action: "request job info" },
-        (matches) => {
-          updateSidePanel(matches);
-        },
-      );
-    });
-  }
+  chrome.storage.local.get(["openaiKey"]).then((result) => {
+    if (result.openaiKey) {
+      key.value = result.openaiKey;
+    }
+  });
 });
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -471,8 +590,10 @@ document.addEventListener("DOMContentLoaded", () => {
         tab.classList.contains("active"),
       );
 
-      const nextIndex = (currentIndex + 1) % tabs.length;
-      activateTab(nextIndex);
+      if ((currentIndex + 1) % tabs.length === 1 || (currentIndex + 1) % tabs.length === 2) {
+        const nextIndex = (currentIndex + 1) % tabs.length;
+        activateTab(nextIndex);
+      }
     });
   });
 });
@@ -495,7 +616,6 @@ document.getElementById("fileInput").addEventListener("change", function () {
 });
 
 document.getElementById("fileInput").addEventListener("change", (event) => {
-  console.log(file.name.toLowerCase());
   const file = event.target.files[0];
   if (!file) return;
 

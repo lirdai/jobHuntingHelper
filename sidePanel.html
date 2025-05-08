@@ -145,7 +145,7 @@
         </div>
 
         <div id="tab1" class="tab-content active">
-            <input type="file" id="fileInput" accept=".pdf,.docx" />
+            <input type="file" id="fileInput" accept=".pdf,.docx" required placeholder="Required" />
             <pre>Accepted file types: .pdf, .docx</pre>
 
             <div id="controls">
@@ -165,13 +165,13 @@
             <h3 id="title">Job Information</h3>
 
             <label>Company</label>
-            <input type="text" id="company" />
+            <input type="text" id="company" required placeholder="Required" />
 
             <label>Position</label>
-            <input type="text" id="position" />
+            <input type="text" id="position" required placeholder="Required" />
 
             <label>Company Description</label>
-            <textarea id="companyDesc"></textarea>
+            <textarea id="companyDesc" required placeholder="Required"></textarea>
 
             <button id="forwardButton" class="icon_button">&#10148;</button>
         </div>
@@ -179,11 +179,12 @@
         <div id="tab3" class="tab-content">
             <h3 id="title">Additional Information</h3>
 
-            <label>ChatGPT Key</label>
-            <input type="text" id="aikey" />
+            <label>OpenAI Key</label>
+            <input type="password" id="aikey" required placeholder="Required" />
+            <pre id="saved-msg" style="display:none; color: green;">OpenAI API key saved successfully</pre>
 
-            <label>Additional Information</label>
-            <textarea id="additionalInfo"></textarea>
+            <label>More about yourself</label>
+            <textarea id="additionalInfo" placeholder="Optional"></textarea>
 
             <button id="createResume" class="icon_button">&#10004;</button>
         </div>
