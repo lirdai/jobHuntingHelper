@@ -1,5 +1,5 @@
 /*global pdfjsLib, mammoth, docx */
-let resume;
+let resumePDF;
 let resumeDocx;
 let resumeOpenAI;
 let companyInfo = {
@@ -17,19 +17,22 @@ function generatePDF(data) {
   const doc = new jsPDF({ unit: "pt", putOnlyUsedFonts: true, compress: true });
   const pdfHeight = 842;
 
-  data.items.forEach((item) => {
-    const text = item.str;
-    const x = item.transform[4];
-    const y = pdfHeight - item.transform[5];
-    const fontSize = item.height;
-
-    doc.setFontSize(fontSize);
-    let fontName = fonts[item.fontName].name,
-      fontStyle = fonts[item.fontName].style;
-    fontName = fontName.substring(fontName.indexOf("+") + 1);
-
-    doc.setFont(fontName, fontStyle);
-    doc.text(text, x, y);
+  data.forEach((content, index) => {
+    if (index !== 0) doc.addPage();
+    content.items.forEach((item) => {
+      const text = item.str;
+      const x = item.transform[4];
+      const y = pdfHeight - item.transform[5];
+      const fontSize = item.height;
+  
+      doc.setFontSize(fontSize);
+      let fontName = fonts[item.fontName].name,
+        fontStyle = fonts[item.fontName].style;
+      fontName = fontName.substring(fontName.indexOf("+") + 1);
+  
+      doc.setFont(fontName, fontStyle);
+      doc.text(text, x, y);
+    });
   });
 
   doc.save("Resume.pdf");
@@ -436,38 +439,38 @@ document.getElementById("createResume").addEventListener("click", async (e) => {
       }
     });
 
-    document.getElementById("loading").style.display = "block";
+    document.getElementById("loading").style.display = "flex";
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${key.value}`,
-      },
-      body: JSON.stringify({
-        "model": "gpt-4.1",
-        "messages": [
-          {
-            "role": "system",
-            "content": `你是一个职业规划师，给别人改写简历信息。别人会给你个人简历信息，以及应聘的工作职位，公司介绍等信息。可能还会有必要的个人特色介绍。
-            你要根据别人给你的这些信息，给他们回复一个符合他们应聘工作的简历。你的回答必须是跟简历模版一样是html格式，但你只可以回复<body>里面的内容。`
-          },
-          {
-            "role": "user",
-            "content": `这是我的简历模版，${resumeDocx}。这是我的简历，${resumeOpenAI}。这是公司的信息，${companyInfo}。这是我的个人特色介绍，也可能是空白，${additionalInfo}`,
-          },
-        ]
-      }),
-    });
-  
-    const data = await response.json();
-    console.log(data?.choices?.[0]?.message?.content || "No response.");
-    document.getElementById("loading").style.display = "none";
+    if (fileName.endsWith(".pdf")) {
+      generatePDF(resumePDF);
+    } else if (fileName.endsWith(".docx")) {
+      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${key.value}`,
+        },
+        body: JSON.stringify({
+          "model": "gpt-4.1",
+          "messages": [
+            {
+              "role": "system",
+              "content": `你是一位职业规划顾问，负责帮助用户优化简历内容。用户会提供他们的简历信息、应聘职位、公司介绍，以及可能包含的个人亮点或特长。
+                          你的任务是根据这些信息，优化并改写简历内容，使其更符合目标职位的要求，更具专业性和吸引力。
+                          你的回复必须采用简历模板格式，并以 HTML 编写。但请注意，你只能返回 <body> 标签内的内容，不能包含 <html>、<head> 或 <body> 标签本身。`
+            },
+            {
+              "role": "user",
+              "content": `这是我的简历模版，${resumeDocx}。这是我的简历，${resumeOpenAI}。这是公司的信息，${companyInfo}。这是我的个人特色介绍，也可能是空白，${additionalInfo}`,
+            },
+          ]
+        }),
+      });
 
-    if (data?.choices?.[0]?.message?.content) {
-      if (fileName.endsWith(".pdf")) {
-        generatePDF(resume);
-      } else if (fileName.endsWith(".docx")) {
+      const data = await response.json();
+      document.getElementById("loading").style.display = "none";
+
+      if (data?.choices?.[0]?.message?.content) {
         generateDocx(data?.choices?.[0]?.message?.content);
       }
     }
@@ -555,7 +558,10 @@ document
           .join("\n");
 
         console.log("fullText", fullText);
-        resume = texts[0];
+        console.log("texts", texts);
+
+        resumePDF = texts;
+        resumeOpenAI = fullText;
       };
 
       reader.readAsArrayBuffer(file);
