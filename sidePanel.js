@@ -1,6 +1,13 @@
 /*global pdfjsLib, mammoth, docx */
 let resume;
 let resumeDocx;
+let resumeOpenAI;
+let companyInfo = {
+  company: null,
+  position: null,
+  companyDesc: null,
+}
+let additionalInfo;
 let fileName;
 let fonts = {};
 const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
@@ -20,7 +27,7 @@ function generatePDF(data) {
     let fontName = fonts[item.fontName].name,
       fontStyle = fonts[item.fontName].style;
     fontName = fontName.substring(fontName.indexOf("+") + 1);
-    console.log(fontName, fontStyle);
+
     doc.setFont(fontName, fontStyle);
     doc.text(text, x, y);
   });
@@ -122,7 +129,6 @@ async function generateDocx(data) {
     }
     i++;
   }
-  console.log("paragraphs", paragraphs);
 
   // const fontUrl = chrome.runtime.getURL("fonts/Arial.ttf");
   // const response = await fetch(fontUrl);
@@ -214,8 +220,6 @@ async function generateDocx(data) {
     },
     // fonts: [{ name: "Pacifico", data: font, characterSet: CharacterSet.ANSI }],
   });
-
-  console.log("Packer", docxFile);
 
   const blob = await Packer.toBlob(docxFile);
 
@@ -337,33 +341,36 @@ chrome.runtime.onMessage.addListener((message) => {
 });
 
 document.getElementById("company").addEventListener("change", (e) => {
-  console.log("Company field updated:", e.target.value);
   const company = document.getElementById("company");
   if (e.target.value === "") {
     company.style.border = "1px solid #DC143C";
   } else {
     company.style.border = "1px solid #000";
   }
+
+  companyInfo.company = e.target.value;
 });
 
 document.getElementById("position").addEventListener("change", (e) => {
-  console.log("Position field updated:", e.target.value);
   const position = document.getElementById("position");
   if (e.target.value === "") {
     position.style.border = "1px solid #DC143C";
   } else {
     position.style.border = "1px solid #000";
   }
+
+  companyInfo.position = e.target.value;
 });
 
 document.getElementById("companyDesc").addEventListener("change", (e) => {
-  console.log("Company description updated:", e.target.value);
   const companyDesc = document.getElementById("companyDesc");
   if (e.target.value === "") {
     companyDesc.style.border = "1px solid #DC143C";
   } else {
     companyDesc.style.border = "1px solid #000";
   }
+
+  companyInfo.companyDesc = e.target.value;
 });
 
 document.getElementById("fileInput").addEventListener("change", (e) => {
@@ -384,6 +391,17 @@ document.getElementById("aikey").addEventListener("change", (e) => {
   }
 });
 
+document.getElementById("additionalInfo").addEventListener("change", (e) => {
+  const additionalInfo = document.getElementById("additionalInfo");
+  if (e.target.value === "") {
+    additionalInfo.style.border = "1px solid #DC143C";
+  } else {
+    additionalInfo.style.border = "1px solid #000";
+  }
+
+  additionalInfo = e.target.value;
+});
+
 document.getElementById("createResume").addEventListener("click", async (e) => {
   const savedMsg = document.getElementById("saved-msg");
   const file = document.getElementById("fileInput");
@@ -396,7 +414,6 @@ document.getElementById("createResume").addEventListener("click", async (e) => {
 
   if (checkIfOk) {
     const keyCheck = key.value.trim();
-    console.log(key, key.value.trim());
     if (!keyCheck.startsWith("sk-")) {
       alert("Please enter a valid OpenAI API key (starting with 'sk-')");
       return;
@@ -419,6 +436,8 @@ document.getElementById("createResume").addEventListener("click", async (e) => {
       }
     });
 
+    document.getElementById("loading").style.display = "block";
+
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -429,25 +448,29 @@ document.getElementById("createResume").addEventListener("click", async (e) => {
         "model": "gpt-4.1",
         "messages": [
           {
-            "role": "user",
-            "content": "You are a helpful assistant."
+            "role": "system",
+            "content": `你是一个职业规划师，给别人改写简历信息。别人会给你个人简历信息，以及应聘的工作职位，公司介绍等信息。可能还会有必要的个人特色介绍。
+            你要根据别人给你的这些信息，给他们回复一个符合他们应聘工作的简历。你的回答必须是跟简历模版一样是html格式，但你只可以回复<body>里面的内容。`
           },
           {
             "role": "user",
-            "content": "Hello!"
-          }
+            "content": `这是我的简历模版，${resumeDocx}。这是我的简历，${resumeOpenAI}。这是公司的信息，${companyInfo}。这是我的个人特色介绍，也可能是空白，${additionalInfo}`,
+          },
         ]
       }),
     });
   
     const data = await response.json();
-    alert(data.choices?.[0]?.message?.content || "No response.");
-  
-    // if (fileName.endsWith(".pdf")) {
-    //   generatePDF(resume);
-    // } else if (fileName.endsWith(".docx")) {
-    //   generateDocx(resumeDocx);
-    // }
+    console.log(data?.choices?.[0]?.message?.content || "No response.");
+    document.getElementById("loading").style.display = "none";
+
+    if (data?.choices?.[0]?.message?.content) {
+      if (fileName.endsWith(".pdf")) {
+        generatePDF(resume);
+      } else if (fileName.endsWith(".docx")) {
+        generateDocx(data?.choices?.[0]?.message?.content);
+      }
+    }
   } else {
     if (file.value === "" || file.value === undefined || file.value === null) {
       file.style.border = "1px solid #DC143C";
@@ -551,6 +574,7 @@ document
         console.log("fullText", fullText);
 
         resumeDocx = html;
+        resumeOpenAI = fullText;
       };
 
       reader.readAsArrayBuffer(file);

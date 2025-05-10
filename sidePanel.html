@@ -2,6 +2,8 @@
 <html>
 
 <head>
+    <meta charset="UTF-8">
+
     <style>
         #my-extension-panel {
             width: calc(100% - 16px);
@@ -133,11 +135,37 @@
         .tab-content.active {
             display: block;
         }
+
+        #loading {
+            font-style: italic;
+            color: gray;
+            padding: 10px;
+            animation: blink 1.2s infinite;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 0.2;
+            }
+
+            50% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0.2;
+            }
+        }
     </style>
 </head>
 
 <body>
     <div id="my-extension-panel">
+        <div id="chat-container">
+            <div id="messages"></div>
+            <div id="loading" style="display: none;">\u{1F916} Typing...</div>
+        </div>
+
         <div class="tabs">
             <div class="tab active" data-tab="tab1">Tab 1</div>
             <div class="tab" data-tab="tab2">Tab 2</div>
