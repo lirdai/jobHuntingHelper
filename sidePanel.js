@@ -516,7 +516,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
       document.getElementById("loading").style.display = "flex";
 
-      console.log(getSystemMessage(select));
       if (fileName.endsWith(".pdf")) {
         generatePDF(resumePDF);
       } else if (fileName.endsWith(".docx")) {
@@ -590,6 +589,12 @@ document.getElementById("fileInput").addEventListener("click", () => {
   const fileInput = document.getElementById("fileInput");
   fileInput.value = "";
   fileInput.style.border = "1px solid #DC143C";
+
+  chrome.storage.local.remove("uploadedResume", () => {});
+  chrome.storage.local.remove("resumeName", () => {});
+
+  const customFileInputLabel = document.getElementById("customFileInputLabel");
+  customFileInputLabel.innerHTML = "📎 Upload Resume";
 
   const output = document.getElementById("output");
   output.innerHTML = "";
@@ -674,6 +679,22 @@ document
 
         resumeDocx = html;
         resumeOpenAI = fullText;
+
+        mammoth
+          .convertToHtml({ arrayBuffer: arrayBuffer })
+          .then(function (result) {
+            chrome.storage.local.set(
+              { uploadedResume: result.value },
+              () => {},
+            );
+            chrome.storage.local.set({ resumeName: fileName }, () => {});
+            document.getElementById("output").innerHTML = result.value;
+            document.getElementById("customFileInputLabel").innerHTML =
+              `📎 ${fileName}`;
+          })
+          .catch(function (err) {
+            console.error("Mammoth conversion error:", err);
+          });
       };
 
       reader.readAsArrayBuffer(file);
@@ -686,6 +707,25 @@ document.addEventListener("DOMContentLoaded", () => {
   chrome.storage.local.get(["openaiKey"]).then((result) => {
     if (result.openaiKey) {
       key.value = result.openaiKey;
+    }
+  });
+
+  chrome.storage.local.get("uploadedResume", (result) => {
+    if (result.uploadedResume) {
+      document.getElementById("output").innerHTML = result.uploadedResume;
+    } else {
+      console.log("No Resume found in storage.");
+    }
+  });
+
+  chrome.storage.local.get("resumeName", (result) => {
+    console.log(result.resumeName);
+
+    if (result.resumeName) {
+      document.getElementById("customFileInputLabel").innerHTML =
+        `📎 ${result.resumeName}`;
+    } else {
+      console.log("No Resume Name found in storage.");
     }
   });
 });
@@ -736,23 +776,6 @@ document.addEventListener("DOMContentLoaded", () => {
       goToPreviousTab();
     }
   });
-});
-
-document.getElementById("fileInput").addEventListener("change", function () {
-  const reader = new FileReader();
-  reader.onload = function (event) {
-    const arrayBuffer = event.target.result;
-
-    mammoth
-      .convertToHtml({ arrayBuffer: arrayBuffer })
-      .then(function (result) {
-        document.getElementById("output").innerHTML = result.value;
-      })
-      .catch(function (err) {
-        console.error("Mammoth conversion error:", err);
-      });
-  };
-  reader.readAsArrayBuffer(this.files[0]);
 });
 
 document.getElementById("fileInput").addEventListener("change", (event) => {

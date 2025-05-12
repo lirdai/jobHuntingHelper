@@ -17,9 +17,35 @@
             padding: 12px;
         }
 
+        #customFileInputLabel {
+            background-color: #ffc107;
+            max-width: 150px;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: inline-block;
+            margin-block-start: 1em;
+            margin-inline-start: 0px;
+            margin-inline-end: 0px;
+            font-weight: bold;
+            unicode-bidi: isolate;
+            font-size: 1.17em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        #customFileInputLabel:hover {
+            background-color: #e0a800;
+        }
+
         #the-canvas {
-            width: 100%;
-            height: 100%;
+            width: 0%;
+            height: 0%;
         }
 
         #output {
@@ -175,7 +201,8 @@
         </div>
 
         <div id="tab1" class="tab-content active">
-            <input type="file" id="fileInput" accept=".docx" required placeholder="Required" />
+            <label for="fileInput" id="customFileInputLabel">📎 Upload Resume</label>
+            <input type="file" id="fileInput" accept=".docx" required style="display:none" />
             <pre>Accepted file types: .docx</pre>
 
             <div id="controls">
