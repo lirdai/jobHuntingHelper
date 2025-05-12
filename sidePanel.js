@@ -38,7 +38,7 @@ function generatePDF(data) {
   doc.save("Resume.pdf");
 }
 
-async function generateDocx(data) {
+async function generateDocx(data, selectionType) {
   const htmlString = `${data}`;
 
   const parser = new DOMParser();
@@ -228,7 +228,7 @@ async function generateDocx(data) {
 
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "resume.docx";
+  a.download = generateFilename(selectionType);
   a.click();
 }
 
@@ -341,6 +341,42 @@ function updateSidePanel(matches) {
   }
 }
 
+function generateFilename(sectionType) {
+  const fileMap = {
+    resume: "resume.docx",
+    cover: "cover_letter.docx",
+    achievement: "achievement.docx",
+    why: "why_us.docx",
+  };
+
+  return fileMap[sectionType] || "document.docx";
+}
+
+function getSystemMessage(sectionType) {
+  let base = `你是一位职业规划顾问，负责帮助用户优化简历内容。用户会提供他们的简历信息、应聘职位、公司介绍，以及可能包含的个人亮点或特长。
+  你的任务是根据这些信息，优化并改写简历内容，使其更符合目标职位的要求，更具专业性和吸引力。
+  你的回复必须采用简历模板格式，并以 HTML 编写。但请注意，你只能返回 <body> 标签内的内容，不能包含 <html>、<head> 或 <body> 标签本身。
+  此外，简历中提及的职位必须与用户所应聘的岗位保持一致。`;
+
+  if (sectionType === "cover") {
+    base = `你是一位职业规划顾问，负责为用户撰写英文求职信（Cover Letter）。用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
+    请根据这些信息，撰写一封不超过 300 字的英文求职信，应为单段形式，语言简洁、正式且具有说服力。信中应突出用户与目标岗位的匹配度以及其应聘动机。
+    请使用简历模板的 HTML 格式返回内容，仅限 <body> 标签内部的部分，不得包含 <html>、<head> 或 <body> 标签本身。`;
+  } else if (sectionType === "achievement") {
+    base = `你是一位职业规划顾问，负责帮助用户提炼并撰写英文版的个人成就总结。用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
+    请根据这些信息，撰写一段不超过 300 字的英文描述，用自然段形式呈现。
+    内容应突出用户最具代表性的个人成就，真实可信，尽可能结合简历中的具体经历进行量化说明，使其更具说服力与专业性。
+    请使用简历模板的 HTML 格式返回内容，仅限 <body> 标签内部的部分，不得包含 <html>、<head> 或 <body> 标签本身。`;
+  } else if (sectionType === "why") {
+    base = `你是一位职业规划顾问，负责帮助用户撰写英文版的“为什么选择我们公司”陈述。用户将提供其简历信息、应聘职位、目标公司介绍，以及可能的个人优势或特长。
+    请根据这些信息，撰写一段不超过 300 字的英文自然段，说明用户选择该公司的理由。
+    内容应体现用户对公司的了解，结合公司文化、使命或项目亮点，并突出其与用户背景或价值观的契合。
+    请以简历模板的 HTML 格式返回，仅限 <body> 标签内部的内容，不得包含 <html>、<head> 或 <body> 标签本身。`;
+  }
+
+  return base;
+}
+
 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
   chrome.tabs.sendMessage(
     tabs[0].id,
@@ -441,6 +477,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const position = document.getElementById("position");
     const companyDesc = document.getElementById("companyDesc");
     const key = document.getElementById("aikey");
+    const select = document.getElementById("infoSelect");
 
     const checkIfOk =
       file.value !== "" &&
@@ -459,7 +496,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       chrome.storage.local.get(["openaiKey"]).then((result) => {
-        if (result.openaiKey === key.value) return;
+        if (result?.openaiKey === key?.value) return;
         else {
           const confirmed = confirm(
             "Would you like us to remember your OpenAI API key?",
@@ -479,6 +516,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       document.getElementById("loading").style.display = "flex";
 
+      console.log(getSystemMessage(select));
       if (fileName.endsWith(".pdf")) {
         generatePDF(resumePDF);
       } else if (fileName.endsWith(".docx")) {
@@ -495,10 +533,7 @@ document.addEventListener("DOMContentLoaded", () => {
               messages: [
                 {
                   role: "system",
-                  content: `你是一位职业规划顾问，负责帮助用户优化简历内容。用户会提供他们的简历信息、应聘职位、公司介绍，以及可能包含的个人亮点或特长。
-                            你的任务是根据这些信息，优化并改写简历内容，使其更符合目标职位的要求，更具专业性和吸引力。
-                            你的回复必须采用简历模板格式，并以 HTML 编写。但请注意，你只能返回 <body> 标签内的内容，不能包含 <html>、<head> 或 <body> 标签本身。
-                            此外，简历中提及的职位必须与用户所应聘的岗位保持一致。`,
+                  content: getSystemMessage(select.value),
                 },
                 {
                   role: "user",
@@ -513,7 +548,7 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("loading").style.display = "none";
 
         if (data?.choices?.[0]?.message?.content) {
-          generateDocx(data?.choices?.[0]?.message?.content);
+          generateDocx(data?.choices?.[0]?.message?.content, select.value);
         }
       }
     } else {

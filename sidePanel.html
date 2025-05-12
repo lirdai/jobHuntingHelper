@@ -40,7 +40,8 @@
         #position,
         #companyDesc,
         #aikey,
-        #additionalInfo {
+        #additionalInfo,
+        #infoSelect {
             display: block;
             border-radius: 6px;
             width: calc(100% - 24px);
@@ -50,7 +51,8 @@
 
         #company,
         #position,
-        #aikey {
+        #aikey,
+        #infoSelect {
             height: 50px;
         }
 
@@ -213,6 +215,14 @@
 
             <label>More about yourself</label>
             <textarea id="additionalInfo" placeholder="Optional"></textarea>
+
+            <label for="infoSelect">Select the file to generate:</label>
+            <select id="infoSelect">
+                <option value="resume">Resume</option>
+                <option value="cover">Cover Letter</option>
+                <option value="achievement">Biggest Achievement</option>
+                <option value="why">Why Us</option>
+            </select>
 
             <button id="createResume" class="icon_button">&#10004;</button>
         </div>
