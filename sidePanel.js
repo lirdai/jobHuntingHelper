@@ -312,11 +312,33 @@ function updateSidePanel(matches) {
     return;
   }
 
-  document.getElementById("company").value = matches?.company?.innerText || "";
-  document.getElementById("position").value =
-    matches?.position?.innerText || "";
-  document.getElementById("companyDesc").value =
-    matches?.companyDesc?.innerText || "";
+  const company = document.getElementById("company");
+  const position = document.getElementById("position");
+  const companyDesc = document.getElementById("companyDesc");
+
+  company.value = matches?.company?.innerText || "";
+
+  if (company.value === "") {
+    company.style.border = "1px solid #DC143C";
+  } else {
+    company.style.border = "1px solid #000";
+  }
+
+  position.value = matches?.position?.innerText || "";
+
+  if (position.value === "") {
+    position.style.border = "1px solid #DC143C";
+  } else {
+    position.style.border = "1px solid #000";
+  }
+
+  companyDesc.value = matches?.companyDesc?.innerText || "";
+
+  if (companyDesc.value === "") {
+    companyDesc.style.border = "1px solid #DC143C";
+  } else {
+    companyDesc.style.border = "1px solid #000";
+  }
 }
 
 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -437,7 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       chrome.storage.local.get(["openaiKey"]).then((result) => {
-        if (result.openaiKey) return;
+        if (result.openaiKey === key.value) return;
         else {
           const confirmed = confirm(
             "Would you like us to remember your OpenAI API key?",
@@ -513,7 +535,8 @@ document.addEventListener("DOMContentLoaded", () => {
       if (companyDesc.value === "") {
         companyDesc.style.border = "1px solid #DC143C";
         alert("Please provide a company introduction");
-      } else {
+      }
+      if (key.value === "") {
         key.style.border = "1px solid #DC143C";
         alert("Please enter your OpenAI API key");
       }
@@ -530,6 +553,7 @@ document.addEventListener("DOMContentLoaded", () => {
 document.getElementById("fileInput").addEventListener("click", () => {
   const fileInput = document.getElementById("fileInput");
   fileInput.value = "";
+  fileInput.style.border = "1px solid #DC143C";
 
   const output = document.getElementById("output");
   output.innerHTML = "";
