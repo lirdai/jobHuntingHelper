@@ -1,14 +1,14 @@
 /*global pdfjsLib, mammoth, docx */
-let resumePDF;
-let resumeDocx;
-let resumeOpenAI;
+let resumePDF = null;
+let resumeDocx = null;
+let resumeOpenAI = null;
 let companyInfo = {
   company: null,
   position: null,
   companyDesc: null,
 };
 let additionalInfo;
-let fileName;
+let fileName = null;
 let fonts = {};
 const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
 
@@ -170,6 +170,15 @@ async function generateDocx(data, selectionType) {
       paragraphStyles: [
         {
           id: "p",
+          paragraph: {
+            spacing: {
+              before: 0,
+              after: 0,
+            },
+          },
+        },
+        {
+          id: "li",
           paragraph: {
             spacing: {
               before: 0,
@@ -355,21 +364,22 @@ function generateFilename(sectionType) {
 function getSystemMessage(sectionType) {
   let base = `你是一位职业规划顾问，负责帮助用户优化简历内容。用户会提供他们的简历信息、应聘职位、公司介绍，以及可能包含的个人亮点或特长。
   你的任务是根据这些信息，优化并改写简历内容，使其更符合目标职位的要求，更具专业性和吸引力。
-  你的回复必须采用简历模板格式，并以 HTML 编写。但请注意，你只能返回 <body> 标签内的内容，不能包含 <html>、<head> 或 <body> 标签本身。
+  简历上如果有skills必须要多match工作招聘上的要求。
+  你的回复必须采用简历模板格式，并以 HTML 编写。要严格按照原来的格式，不可以自己乱添加删减空格。但请注意，你只能返回 <body> 标签内的内容，不能包含 <html>、<head> 或 <body> 标签本身。
   此外，简历中提及的职位必须与用户所应聘的岗位保持一致。`;
 
   if (sectionType === "cover") {
     base = `你是一位职业规划顾问，负责为用户撰写英文求职信（Cover Letter）。用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
-    请根据这些信息，撰写一封不超过 300 字的英文求职信，应为单段形式，语言简洁、正式且具有说服力。信中应突出用户与目标岗位的匹配度以及其应聘动机。
+    请根据这些信息，撰写一封不超过 150 字的英文求职信，应为单段形式，语言简洁、正式且具有说服力。信中应突出用户与目标岗位的匹配度以及其应聘动机。
     请使用简历模板的 HTML 格式返回内容，仅限 <body> 标签内部的部分，不得包含 <html>、<head> 或 <body> 标签本身。`;
   } else if (sectionType === "achievement") {
     base = `你是一位职业规划顾问，负责帮助用户提炼并撰写英文版的个人成就总结。用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
-    请根据这些信息，撰写一段不超过 300 字的英文描述，用自然段形式呈现。
+    请根据这些信息，撰写一段不超过 150 字的英文描述，用自然段形式呈现。
     内容应突出用户最具代表性的个人成就，真实可信，尽可能结合简历中的具体经历进行量化说明，使其更具说服力与专业性。
     请使用简历模板的 HTML 格式返回内容，仅限 <body> 标签内部的部分，不得包含 <html>、<head> 或 <body> 标签本身。`;
   } else if (sectionType === "why") {
     base = `你是一位职业规划顾问，负责帮助用户撰写英文版的“为什么选择我们公司”陈述。用户将提供其简历信息、应聘职位、目标公司介绍，以及可能的个人优势或特长。
-    请根据这些信息，撰写一段不超过 300 字的英文自然段，说明用户选择该公司的理由。
+    请根据这些信息，撰写一段不超过 150 字的英文自然段，说明用户选择该公司的理由。
     内容应体现用户对公司的了解，结合公司文化、使命或项目亮点，并突出其与用户背景或价值观的契合。
     请以简历模板的 HTML 格式返回，仅限 <body> 标签内部的内容，不得包含 <html>、<head> 或 <body> 标签本身。`;
   }
@@ -479,10 +489,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const key = document.getElementById("aikey");
     const select = document.getElementById("infoSelect");
 
+    const fileIfOk = file.value || resumeDocx !== null || resumeOpenAI !== null;
+    console.log(resumeDocx, resumeOpenAI);
+
     const checkIfOk =
-      file.value !== "" &&
-      file.value !== undefined &&
-      file.value !== null &&
+      fileIfOk &&
       company.value !== "" &&
       position.value !== "" &&
       companyDesc.value !== "" &&
@@ -551,11 +562,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       }
     } else {
-      if (
-        file.value === "" ||
-        file.value === undefined ||
-        file.value === null
-      ) {
+      if (!file.value && !resumeDocx.value && !resumeOpenAI.value) {
         file.style.border = "1px solid #DC143C";
         alert("Please upload your resume");
       }
@@ -591,6 +598,7 @@ document.getElementById("fileInput").addEventListener("click", () => {
   fileInput.style.border = "1px solid #DC143C";
 
   chrome.storage.local.remove("uploadedResume", () => {});
+  chrome.storage.local.remove("uploadedHtmlResume", () => {});
   chrome.storage.local.remove("resumeName", () => {});
 
   const customFileInputLabel = document.getElementById("customFileInputLabel");
@@ -681,16 +689,28 @@ document
         resumeOpenAI = fullText;
 
         mammoth
-          .convertToHtml({ arrayBuffer: arrayBuffer })
+          .convertToHtml({ arrayBuffer })
           .then(function (result) {
             chrome.storage.local.set(
-              { uploadedResume: result.value },
+              { uploadedHtmlResume: result.value },
               () => {},
             );
             chrome.storage.local.set({ resumeName: fileName }, () => {});
             document.getElementById("output").innerHTML = result.value;
             document.getElementById("customFileInputLabel").innerHTML =
               `📎 ${fileName}`;
+          })
+          .catch(function (err) {
+            console.error("Mammoth conversion error:", err);
+          });
+
+        mammoth
+          .extractRawText({ arrayBuffer })
+          .then(function (result) {
+            chrome.storage.local.set(
+              { uploadedResume: result.value },
+              () => {},
+            );
           })
           .catch(function (err) {
             console.error("Mammoth conversion error:", err);
@@ -710,20 +730,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  chrome.storage.local.get("uploadedHtmlResume", (result) => {
+    if (result.uploadedHtmlResume) {
+      document.getElementById("output").innerHTML = result.uploadedHtmlResume;
+      resumeDocx = result.uploadedHtmlResume;
+    } else {
+      console.log("No Resume found in storage.");
+    }
+  });
+
   chrome.storage.local.get("uploadedResume", (result) => {
     if (result.uploadedResume) {
-      document.getElementById("output").innerHTML = result.uploadedResume;
+      resumeOpenAI = result.uploadedResume;
     } else {
       console.log("No Resume found in storage.");
     }
   });
 
   chrome.storage.local.get("resumeName", (result) => {
-    console.log(result.resumeName);
-
     if (result.resumeName) {
       document.getElementById("customFileInputLabel").innerHTML =
         `📎 ${result.resumeName}`;
+      fileName = result.resumeName;
     } else {
       console.log("No Resume Name found in storage.");
     }
