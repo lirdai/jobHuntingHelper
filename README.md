@@ -19,9 +19,9 @@ AI Job Assistant is a Chrome extension powered by OpenAI that helps you optimize
 ## Demo
 Here are three video demos:
 
-[![Demo 1](demo/clip1.png)](https://github.com/lirdai/jobHuntingHelper/blob/main/demo/clip1.mp4)
-[![Demo 2](demo/clip2.png)](https://github.com/lirdai/jobHuntingHelper/blob/main/demo/clip2.mp4)
-[![Demo 3](demo/clip3.png)](https://github.com/lirdai/jobHuntingHelper/blob/main/demo/clip3.mp4)
+![Demo GIF](demo/clip.gif)
+![Demo GIF](demo/clip1.gif)
+![Demo GIF](demo/clip2.gif)
 
 ## Feedback & Support
 We welcome your feedback and bug reports via the extension’s support page or GitHub issues to help us improve.
