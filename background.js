@@ -1,8 +1,6 @@
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
 
 chrome.action.onClicked.addListener((tab) => {
-  console.log("Extension icon was clicked");
-
   chrome.scripting.executeScript({
     target: { tabId: tab.id },
     files: ["content.js"],
@@ -11,8 +9,6 @@ chrome.action.onClicked.addListener((tab) => {
 
 chrome.webRequest.onCompleted.addListener(
   (details) => {
-    console.log("✅ Job-related API call completed:", details.url);
-
     chrome.runtime.sendMessage(null, {
       action: "Job API Completed",
       url: details.url,
@@ -24,5 +20,17 @@ chrome.webRequest.onCompleted.addListener(
       "*://www.linkedin.com/voyager/api/jobs/*",
       "*://api.monster.io/*",
     ],
+  },
+);
+
+chrome.webNavigation.onHistoryStateUpdated.addListener(
+  (details) => {
+    chrome.runtime.sendMessage(null, {
+      action: "Job API Completed",
+      url: details.url,
+    });
+  },
+  {
+    url: [{ hostEquals: "www.linkedin.com", pathPrefix: "/jobs/search/" }],
   },
 );

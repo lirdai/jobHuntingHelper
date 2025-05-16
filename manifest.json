@@ -9,7 +9,8 @@
         "scripting",
         "webRequest",
         "sidePanel",
-        "storage"
+        "storage",
+        "webNavigation"
     ],
     "host_permissions": [
         "<all_urls>"

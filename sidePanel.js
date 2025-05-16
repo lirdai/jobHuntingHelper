@@ -398,6 +398,7 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 });
 
 chrome.runtime.onMessage.addListener((message) => {
+  console.log("woooo!!!!!", message);
   if (message.action === "Job API Completed") {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.tabs.sendMessage(

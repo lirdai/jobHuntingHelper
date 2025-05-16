@@ -68,7 +68,6 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   const matches = collectInfoForPanel();
 
   if (message.action === "request job info") {
-    console.log(message.action);
     sendResponse(matches);
   }
 });
