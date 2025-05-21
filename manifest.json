@@ -18,7 +18,9 @@
         "webNavigation"
     ],
     "host_permissions": [
-        "<all_urls>"
+        "https://ca.indeed.com/*",
+        "https://www.linkedin.com/*",
+        "https://api.monster.io/*"
     ],
     "background": {
         "service_worker": "background.js"
