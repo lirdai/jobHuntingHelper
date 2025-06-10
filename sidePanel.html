@@ -21,6 +21,25 @@
             pointer-events: all;
         }
 
+        .spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border: 6px solid #ccc;
+            border-top: 6px solid #4CAF50;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: translate(-50%, -50%) rotate(360deg);
+            }
+        }
+
         #my-extension-panel {
             width: calc(100% - 16px);
             height: 100%;
@@ -213,7 +232,9 @@
 </head>
 
 <body>
-    <div id="overlay"></div>
+    <div id="overlay">
+        <div class="spinner"></div>
+    </div>
 
     <div id="my-extension-panel">
         <div id="chat-container">

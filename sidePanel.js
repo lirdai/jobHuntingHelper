@@ -348,6 +348,10 @@ function updateSidePanel(matches) {
   } else {
     companyDesc.style.border = "1px solid #000";
   }
+
+  companyInfo.company = company.value;
+  companyInfo.position = position.value;
+  companyInfo.companyDesc = companyDesc.value;
 }
 
 function generateFilename(sectionType) {
@@ -373,6 +377,7 @@ function getSystemMessage(sectionType) {
       用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
 
       请根据这些信息，撰写一封不超过150字的英文求职信，要求如下：  
+      - 麻烦写下公司名字${companyInfo.company}
       - 采用单段形式，语言简洁、正式且具有说服力  
       - 明确突出用户与目标岗位的匹配度以及应聘动机  
       - 结构完整，包含开头问候（greeting）、正文内容、标准结尾语句（closing statement）和签名（sign off，使用用户简历上的名字）  
@@ -510,6 +515,15 @@ document.addEventListener("DOMContentLoaded", () => {
         position.value !== "" &&
         companyDesc.value !== "" &&
         key.value !== "";
+
+      console.log(
+        "companyInfo",
+        companyInfo,
+        "resumeDocx",
+        resumeDocx,
+        "resumeOpenAI",
+        resumeOpenAI,
+      );
 
       if (checkIfOk) {
         const keyCheck = key.value.trim();
