@@ -2,13 +2,13 @@
 let resumePDF = null;
 let resumeDocx = null;
 let resumeOpenAI = null;
+let fileName = null;
 let companyInfo = {
   company: null,
   position: null,
   companyDesc: null,
 };
 let additionalInfo;
-let fileName = null;
 let fonts = {};
 const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
 
@@ -369,9 +369,17 @@ function getSystemMessage(sectionType) {
   此外，简历中提及的职位必须与用户所应聘的岗位保持一致。`;
 
   if (sectionType === "cover") {
-    base = `你是一位职业规划顾问，负责为用户撰写英文求职信（Cover Letter）。用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
-    请根据这些信息，撰写一封不超过 150 字的英文求职信，应为单段形式，语言简洁、正式且具有说服力。信中应突出用户与目标岗位的匹配度以及其应聘动机。
-    请使用简历模板的 HTML 格式返回内容，仅限 <body> 标签内部的部分，不得包含 <html>、<head> 或 <body> 标签本身。`;
+    base = `你是一位职业规划顾问，负责为用户撰写英文求职信（Cover Letter）。
+      用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
+
+      请根据这些信息，撰写一封不超过150字的英文求职信，要求如下：  
+      - 采用单段形式，语言简洁、正式且具有说服力  
+      - 明确突出用户与目标岗位的匹配度以及应聘动机  
+      - 结构完整，包含开头问候（greeting）、正文内容、标准结尾语句（closing statement）和签名（sign off，使用用户简历上的名字）  
+      - 使用简历模板的HTML格式返回内容，仅包含<body>标签内部内容，不得包含<html>、<head>或<body>标签本身  
+      - 求职信格式应清晰，包含适当的段落或换行标签（如<p>、<br>等）以提升可读性  
+
+      请根据上述要求生成Cover Letter正文的HTML代码。`;
   } else if (sectionType === "achievement") {
     base = `你是一位职业规划顾问，负责帮助用户提炼并撰写英文版的个人成就总结。用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
     请根据这些信息，撰写一段不超过 150 字的英文描述，用自然段形式呈现。
@@ -398,7 +406,6 @@ chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
 });
 
 chrome.runtime.onMessage.addListener((message) => {
-  console.log("woooo!!!!!", message);
   if (message.action === "Job API Completed") {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       chrome.tabs.sendMessage(
@@ -479,116 +486,128 @@ document.getElementById("additionalInfo").addEventListener("change", (e) => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
-  const createResumeBtn = document.getElementById("createResume");
+  const createFileBtn = document.getElementById("createFile");
 
-  createResumeBtn.addEventListener("click", async () => {
-    const savedMsg = document.getElementById("saved-msg");
-    const file = document.getElementById("fileInput");
-    const company = document.getElementById("company");
-    const position = document.getElementById("position");
-    const companyDesc = document.getElementById("companyDesc");
-    const key = document.getElementById("aikey");
-    const select = document.getElementById("infoSelect");
+  createFileBtn.addEventListener("click", async () => {
+    createFileBtn.disabled = true;
+    document.getElementById("overlay").style.display = "block";
+    document.body.classList.add("locked");
 
-    const fileIfOk = file.value || resumeDocx !== null || resumeOpenAI !== null;
-    console.log(resumeDocx, resumeOpenAI);
+    try {
+      const savedMsg = document.getElementById("saved-msg");
+      const file = document.getElementById("fileInput");
+      const company = document.getElementById("company");
+      const position = document.getElementById("position");
+      const companyDesc = document.getElementById("companyDesc");
+      const key = document.getElementById("aikey");
+      const select = document.getElementById("infoSelect");
 
-    const checkIfOk =
-      fileIfOk &&
-      company.value !== "" &&
-      position.value !== "" &&
-      companyDesc.value !== "" &&
-      key.value !== "";
+      const fileIfOk = file?.value || resumeDocx;
 
-    if (checkIfOk) {
-      const keyCheck = key.value.trim();
-      if (!keyCheck.startsWith("sk-")) {
-        alert("Please enter a valid OpenAI API key (starting with 'sk-')");
-        return;
-      }
+      const checkIfOk =
+        fileIfOk &&
+        company.value !== "" &&
+        position.value !== "" &&
+        companyDesc.value !== "" &&
+        key.value !== "";
 
-      chrome.storage.local.get(["openaiKey"]).then((result) => {
-        if (result?.openaiKey === key?.value) return;
-        else {
-          const confirmed = confirm(
-            "Would you like us to remember your OpenAI API key?",
+      if (checkIfOk) {
+        const keyCheck = key.value.trim();
+        if (!keyCheck.startsWith("sk-")) {
+          alert("Please enter a valid OpenAI API key (starting with 'sk-')");
+          return;
+        }
+
+        chrome.storage.local.get(["openaiKey"]).then((result) => {
+          if (result?.openaiKey === key?.value) return;
+          else {
+            const confirmed = confirm(
+              "Would you like us to remember your OpenAI API key?",
+            );
+            if (confirmed) {
+              chrome.storage.local.set({ openaiKey: key.value }).then(() => {
+                savedMsg.style.display = "block";
+                setTimeout(() => {
+                  savedMsg.style.display = "none";
+                }, 2000);
+              });
+            } else {
+              alert("OpenAI API key was not saved");
+            }
+          }
+        });
+
+        document.getElementById("loading").style.display = "flex";
+
+        if (fileName.endsWith(".pdf")) {
+          generatePDF(resumePDF);
+        } else if (fileName.endsWith(".docx")) {
+          const response = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${key.value}`,
+              },
+              body: JSON.stringify({
+                model: "gpt-4.1",
+                messages: [
+                  {
+                    role: "system",
+                    content: getSystemMessage(select.value),
+                  },
+                  {
+                    role: "user",
+                    content: `这是我的简历模版，${resumeDocx}。这是我的简历，${resumeOpenAI}。这是公司的信息，${companyInfo}。这是我的个人特色介绍，也可能是空白，${additionalInfo}`,
+                  },
+                ],
+              }),
+            },
           );
-          if (confirmed) {
-            chrome.storage.local.set({ openaiKey: key.value }).then(() => {
-              savedMsg.style.display = "block";
-              setTimeout(() => {
-                savedMsg.style.display = "none";
-              }, 2000);
-            });
-          } else {
-            alert("OpenAI API key was not saved");
+
+          const data = await response.json();
+          document.getElementById("loading").style.display = "none";
+
+          if (data?.choices?.[0]?.message?.content) {
+            generateDocx(data?.choices?.[0]?.message?.content, select.value);
           }
         }
-      });
-
-      document.getElementById("loading").style.display = "flex";
-
-      if (fileName.endsWith(".pdf")) {
-        generatePDF(resumePDF);
-      } else if (fileName.endsWith(".docx")) {
-        const response = await fetch(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${key.value}`,
-            },
-            body: JSON.stringify({
-              model: "gpt-4.1",
-              messages: [
-                {
-                  role: "system",
-                  content: getSystemMessage(select.value),
-                },
-                {
-                  role: "user",
-                  content: `这是我的简历模版，${resumeDocx}。这是我的简历，${resumeOpenAI}。这是公司的信息，${companyInfo}。这是我的个人特色介绍，也可能是空白，${additionalInfo}`,
-                },
-              ],
-            }),
-          },
-        );
-
-        const data = await response.json();
-        document.getElementById("loading").style.display = "none";
-
-        if (data?.choices?.[0]?.message?.content) {
-          generateDocx(data?.choices?.[0]?.message?.content, select.value);
+      } else {
+        if (!fileIfOk) {
+          file.style.border = "1px solid #DC143C";
+          alert("Please upload your resume");
+        }
+        if (company.value === "") {
+          company.style.border = "1px solid #DC143C";
+          alert("Please provide the company name");
+        }
+        if (position.value === "") {
+          position.style.border = "1px solid #DC143C";
+          alert("Please provide the job title");
+        }
+        if (companyDesc.value === "") {
+          companyDesc.style.border = "1px solid #DC143C";
+          alert("Please provide a company introduction");
+        }
+        if (key.value === "") {
+          key.style.border = "1px solid #DC143C";
+          alert("Please enter your OpenAI API key");
         }
       }
-    } else {
-      if (!file.value && !resumeDocx.value && !resumeOpenAI.value) {
-        file.style.border = "1px solid #DC143C";
-        alert("Please upload your resume");
-      }
-      if (company.value === "") {
-        company.style.border = "1px solid #DC143C";
-        alert("Please provide the company name");
-      }
-      if (position.value === "") {
-        position.style.border = "1px solid #DC143C";
-        alert("Please provide the job title");
-      }
-      if (companyDesc.value === "") {
-        companyDesc.style.border = "1px solid #DC143C";
-        alert("Please provide a company introduction");
-      }
-      if (key.value === "") {
-        key.style.border = "1px solid #DC143C";
-        alert("Please enter your OpenAI API key");
-      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Upload failed.");
+    } finally {
+      document.getElementById("overlay").style.display = "none";
+      document.body.classList.remove("locked");
+      createFileBtn.disabled = false;
     }
   });
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
-      createResumeBtn.click();
+      createFileBtn.click();
     }
   });
 });
@@ -601,6 +620,10 @@ document.getElementById("fileInput").addEventListener("click", () => {
   chrome.storage.local.remove("uploadedResume", () => {});
   chrome.storage.local.remove("uploadedHtmlResume", () => {});
   chrome.storage.local.remove("resumeName", () => {});
+
+  resumeDocx = null;
+  resumeOpenAI = null;
+  fileName = null;
 
   const customFileInputLabel = document.getElementById("customFileInputLabel");
   customFileInputLabel.innerHTML = "📎 Upload Resume";
@@ -736,7 +759,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("output").innerHTML = result.uploadedHtmlResume;
       resumeDocx = result.uploadedHtmlResume;
     } else {
-      console.log("No Resume found in storage.");
+      console.log("No uploadedHtmlResume found in storage.");
     }
   });
 
@@ -744,7 +767,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (result.uploadedResume) {
       resumeOpenAI = result.uploadedResume;
     } else {
-      console.log("No Resume found in storage.");
+      console.log("No uploadedResume found in storage.");
     }
   });
 
@@ -754,7 +777,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `📎 ${result.resumeName}`;
       fileName = result.resumeName;
     } else {
-      console.log("No Resume Name found in storage.");
+      console.log("No resumeName found in storage.");
     }
   });
 });
