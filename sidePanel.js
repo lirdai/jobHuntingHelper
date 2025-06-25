@@ -1,4 +1,12 @@
 /*global pdfjsLib, mammoth, docx */
+/* 
+  sidepanel -> content.js -> chrome.tabs
+  background -> content.js -> chrome.tabs
+  sidepanel -> background.js -> chrome.runtime
+  content -> sidepanel.js -> chrome.runtime
+  content -> background.js -> chrome.runtime
+  background -> sidepanel.js -> chrome.runtime
+*/
 let resumePDF = null;
 let resumeDocx = null;
 let resumeOpenAI = null;
