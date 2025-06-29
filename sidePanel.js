@@ -397,22 +397,18 @@ function generateFileFormat(sectionType) {
 }
 
 document.getElementById("company").addEventListener("change", (e) => {
-  console.log("company", e.target.value);
   companyInfo.company = e.target.value;
 });
 
 document.getElementById("position").addEventListener("change", (e) => {
-  console.log("position", e.target.value);
   companyInfo.position = e.target.value;
 });
 
 document.getElementById("companyDesc").addEventListener("change", (e) => {
-  console.log("companyDesc", e.target.value);
   companyInfo.companyDesc = e.target.value;
 });
 
 document.getElementById("chatBox").addEventListener("change", (e) => {
-  console.log("chatBox", e.target.value);
   chatBox = e.target.value;
 });
 
@@ -430,7 +426,7 @@ document.getElementById("modeToggle").addEventListener("change", () => {
     chatWindow.style.display = "block";
     generateFile.style.display = "none";
   } else {
-    generateFile.style.display = "block";
+    generateFile.style.display = "flex";
     chatWindow.style.display = "none";
   }
 });
@@ -675,7 +671,6 @@ document.addEventListener("DOMContentLoaded", () => {
         if (fileName.endsWith(".pdf")) {
           generatePDF(resumePDF);
         } else if (fileName.endsWith(".docx")) {
-          console.log("companyInfo", companyInfo, "chatBox", chatBox);
           const response = await fetch(
             "https://api.openai.com/v1/chat/completions",
             {
@@ -739,13 +734,9 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("loading").style.display = "none";
 
           if (data?.choices?.[0]?.message?.content) {
-            if (toggle.checked) {
-              console.log(
-                "chatonly lalal",
-                data?.choices?.[0]?.message?.content,
-              );
-              addMessage(null, data?.choices?.[0]?.message?.content);
-            } else {
+            addMessage(null, data?.choices?.[0]?.message?.content);
+
+            if (!toggle.checked) {
               generateDocx(data?.choices?.[0]?.message?.content, select.value);
             }
           }
@@ -774,12 +765,6 @@ document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("overlay").style.display = "none";
       document.body.classList.remove("locked");
       createFileBtn.disabled = false;
-    }
-  });
-
-  document.getElementById("tab3").addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      createFileBtn.click();
     }
   });
 });
