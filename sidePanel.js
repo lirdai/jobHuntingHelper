@@ -478,7 +478,6 @@ document
   .addEventListener("change", async (event) => {
     const file = event.target.files[0];
     if (!file) return;
-    console.log(file);
     fileName = file.name;
 
     if (fileName.endsWith(".pdf")) {
@@ -615,8 +614,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   createFileBtn.addEventListener("click", async () => {
     createFileBtn.disabled = true;
-    addMessage(chatBox, null);
-
     document.getElementById("overlay").style.display = "block";
     document.body.classList.add("locked");
 
@@ -666,6 +663,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
+        addMessage(chatBox, null);
+        taileredCommand.value = "";
         document.getElementById("loading").style.display = "flex";
 
         if (fileName.endsWith(".pdf")) {

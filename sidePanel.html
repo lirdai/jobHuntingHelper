@@ -398,6 +398,17 @@
         #chat_window {
             display: none;
         }
+
+        .avatar {
+            width: 65px;
+            height: 65px;
+            border-radius: 100px;
+        }
+
+        #avatar-group {
+            justify-content: center;
+            align-items: center;
+        }
     </style>
 </head>
 
@@ -521,12 +532,31 @@
         <div id="tab4" class="tab-content">
             <h3 id="title">Setting</h3>
 
+            <div id="avatar-group" class="form-group">
+                <img src="images/default-avatar.jpg" class="avatar" />
+                <p>Status: <strong>Not Logged In</strong></p>
+            </div>
+
             <div class="form-group">
                 <label>OpenAI Key</label>
-                <input type="password" id="aikey" required placeholder="OpenAI Key" />
+                <input type="password" id="aikey" required
+                    placeholder="Your key stays on your computer — we don’t see or store it." />
                 <small class="error">This field is required</small>
                 <pre id="saved-msg" style="display:none; color: green;">OpenAI API key saved successfully</pre>
+                <small>For your privacy, the key is stored only in your browser's local storage. It is never uploaded or
+                    shared.</small>
             </div>
+
+            <div class="form-group">
+                <label>Message Behavior</label>
+                <select id="chatMode">
+                    <option value="conversation">Conversation Mode (with history)</option>
+                    <option value="single">Single-turn Mode (no history)</option>
+                    <option value="perTask">Clear History Per Task</option>
+                </select>
+            </div>
+
+            <button id="updateSetting" class="icon_button">&#10004;</button>
         </div>
 </body>
 
