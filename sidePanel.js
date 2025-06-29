@@ -397,19 +397,42 @@ function generateFileFormat(sectionType) {
 }
 
 document.getElementById("company").addEventListener("change", (e) => {
+  console.log("company", e.target.value);
   companyInfo.company = e.target.value;
 });
 
 document.getElementById("position").addEventListener("change", (e) => {
+  console.log("position", e.target.value);
   companyInfo.position = e.target.value;
 });
 
 document.getElementById("companyDesc").addEventListener("change", (e) => {
+  console.log("companyDesc", e.target.value);
   companyInfo.companyDesc = e.target.value;
 });
 
 document.getElementById("chatBox").addEventListener("change", (e) => {
+  console.log("chatBox", e.target.value);
   chatBox = e.target.value;
+});
+
+document.getElementById("modeToggle").addEventListener("change", () => {
+  const toggle = document.getElementById("modeToggle");
+  const switchValue = document.getElementById("switchValue");
+  const generateFile = document.getElementById("generate_file");
+  const chatWindow = document.getElementById("chat_window");
+
+  switchValue.textContent = toggle.checked
+    ? "Current Mode: Chat Only"
+    : "Current Mode: Generate File";
+
+  if (toggle.checked) {
+    chatWindow.style.display = "block";
+    generateFile.style.display = "none";
+  } else {
+    generateFile.style.display = "block";
+    chatWindow.style.display = "none";
+  }
 });
 
 document.getElementById("fileInput").addEventListener("change", (event) => {
@@ -555,11 +578,49 @@ document
     }
   });
 
+function checkChatWindowEmpty() {
+  const chatWindow = document.getElementById("chat_window");
+  const emptyIcon = document.getElementById("empty_icon");
+
+  if (chatWindow.children.length > 1) {
+    emptyIcon.style.display = "none";
+  } else {
+    emptyIcon.style.display = "block";
+  }
+}
+
+function addMessage(userText, assistantHTML) {
+  const chatWindow = document.getElementById("chat_window");
+
+  if (userText) {
+    const userMsg = document.createElement("div");
+    userMsg.className = "chat-message user-message";
+    userMsg.textContent = userText;
+    chatWindow.appendChild(userMsg);
+  }
+  if (assistantHTML) {
+    const assistantMsg = document.createElement("div");
+    assistantMsg.className = "chat-message assistant-message";
+    assistantMsg.innerHTML = assistantHTML;
+    chatWindow.appendChild(assistantMsg);
+  }
+
+  checkChatWindowEmpty();
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  checkChatWindowEmpty();
+});
+
 document.addEventListener("DOMContentLoaded", () => {
   const createFileBtn = document.getElementById("createFile");
+  const toggle = document.getElementById("modeToggle");
 
   createFileBtn.addEventListener("click", async () => {
     createFileBtn.disabled = true;
+    addMessage(chatBox, null);
+
     document.getElementById("overlay").style.display = "block";
     document.body.classList.add("locked");
 
@@ -614,7 +675,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (fileName.endsWith(".pdf")) {
           generatePDF(resumePDF);
         } else if (fileName.endsWith(".docx")) {
-          console.log("chatBox", chatBox);
+          console.log("companyInfo", companyInfo, "chatBox", chatBox);
           const response = await fetch(
             "https://api.openai.com/v1/chat/completions",
             {
@@ -630,13 +691,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 messages: [
                   {
                     role: "system",
-                    content: `
+                    content: toggle.checked
+                      ? `The user will provide four inputs:
+                        - Resume template: ${resumeDocx}
+                        - Resume content: ${resumeOpenAI}
+                        - Job and company information, provided as an object representing the current job application the user is pursuing:
+                          - company: the target company name ${companyInfo.company}
+                          - position: the job title being applied for ${companyInfo.position}
+                          - companyDescription: a brief description of the company, including its culture, values, or business focus ${companyInfo.companyDesc}
+                        - Optional chat context or instructions: ${chatBox}
+
+                        You are a professional career advisor. Your task is to engage in a conversation and answer the user’s career-related questions — such as how to improve their resume, job fit analysis, or how to write a cover letter — **without generating or editing any resume or content directly**.
+
+                        You must not create, modify, or reformat the resume unless the ${chatBox} input explicitly instructs you to do so.
+
+                        Your response must:
+                        - Be written in HTML format.
+                        - Only return the content within the <body> tag — do not include <html>, <head>, or <body> tags themselves.
+                        - If a resume is to be generated (only if explicitly asked), strictly follow the provided resume template, preserving original structure and spacing.
+                        `
+                      : `
                         You are a career advisor who helps users improve resumes, cover letters, and other job application content.
                         Please generate a ${generateFileFormat(select.value)}, based on the provided information.
                         The user will provide three inputs:
                         - Resume template: ${resumeDocx}
                         - Resume content: ${resumeOpenAI}
-                        - Job and company information: ${companyInfo}   
+                        - Job and company information, provided as an object representing the current job application the user is pursuing:
+                          - company: the target company name ${companyInfo.company}
+                          - position: the job title being applied for ${companyInfo.position}
+                          - companyDescription: a brief description of the company, including its culture, values, or business focus ${companyInfo.companyDesc}
                      
                         Feel free to update job titles, company names, skills, values, or any key details as needed to closely match the target role and company.
                         Your response must follow a resume template format and be written in HTML. 
@@ -645,7 +728,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         If a specific task is provided, it should take precedence over the default instructions.
                         Your specific task is as follows:
                         ${chatBox}
-                      `,
+                        `,
                   },
                 ],
               }),
@@ -656,7 +739,15 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("loading").style.display = "none";
 
           if (data?.choices?.[0]?.message?.content) {
-            generateDocx(data?.choices?.[0]?.message?.content, select.value);
+            if (toggle.checked) {
+              console.log(
+                "chatonly lalal",
+                data?.choices?.[0]?.message?.content,
+              );
+              addMessage(null, data?.choices?.[0]?.message?.content);
+            } else {
+              generateDocx(data?.choices?.[0]?.message?.content, select.value);
+            }
           }
         }
       } else {

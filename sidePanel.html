@@ -102,7 +102,8 @@
             flex-direction: column;
         }
 
-        label {
+        label,
+        .label-text {
             font-weight: 600;
             margin-bottom: 0.25rem;
         }
@@ -142,7 +143,8 @@
             box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
         }
 
-        .chat-window {
+        .chat_window {
+            position: relative;
             border: 1px solid #ccc;
             border-radius: 6px;
             padding: 12px;
@@ -150,6 +152,39 @@
             overflow-y: auto;
             background: #fff;
             margin-bottom: 32px;
+        }
+
+        .chat-message {
+            max-width: 80%;
+            margin: 8px 0;
+            padding: 10px 14px;
+            border-radius: 10px;
+            font-family: sans-serif;
+            line-height: 1.4;
+        }
+
+        .user-message {
+            background-color: #e0f7fa;
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .assistant-message {
+            background-color: #f1f1f1;
+            align-self: flex-start;
+            text-align: left;
+        }
+
+        .empty-icon {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #aaa;
+            font-family: sans-serif;
+            font-size: 14px;
+            opacity: 0.6;
         }
 
         .icon_button {
@@ -309,6 +344,61 @@
                 opacity: 0.2;
             }
         }
+
+        .switch-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider::before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: green;
+        }
+
+        input:checked+.slider::before {
+            transform: translateX(26px);
+        }
+
+        #chat_window {
+            display: none;
+        }
     </style>
 </head>
 
@@ -331,8 +421,7 @@
                 <div class="tab active" data-tab="tab1">Resume</div>
                 <div class="tab" data-tab="tab2">Job</div>
                 <div class="tab" data-tab="tab3">Documents</div>
-                <div class="tab" data-tab="tab4">Chat</div>
-                <div class="tab" data-tab="tab5">Settings</div>
+                <div class="tab" data-tab="tab4">Settings</div>
             </div>
         </div>
 
@@ -384,12 +473,29 @@
             <h3 id="title">Download Area</h3>
 
             <div class="form-group">
-                <label>Tell ChatGPT what you want</label>
-                <textarea id="chatBox" required placeholder="Help me think clearly, but keep answers short"></textarea>
-                <small class="error">This field is required</small>
+                <div class="switch-wrapper">
+                    <span class="label-text">Generate File</span>
+                    <label class="switch">
+                        <input type="checkbox" id="modeToggle" />
+                        <span class="slider"></span>
+                    </label>
+                    <span class="label-text">Chat Only</span>
+                </div>
+
+                <p id="switchValue">Current Mode: Generate File</p>
             </div>
 
-            <div class="form-group">
+            <div class="chat_window" id="chat_window">
+                <div class="empty-icon" id="empty_icon">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    <p>No messages yet</p>
+                </div>
+            </div>
+
+            <div class="form-group" id="generate_file">
                 <label for="infoSelect">Select the file to generate:</label>
                 <select id="infoSelect">
                     <option value="resume">Resume</option>
@@ -404,24 +510,16 @@
                 <small class="error">This field is required</small>
             </div>
 
+            <div class="form-group">
+                <label>Tell me what you want</label>
+                <textarea id="chatBox" required placeholder="I'm ready! what do you want to make?"></textarea>
+                <small class="error">This field is required</small>
+            </div>
+
             <button id="createFile" class="icon_button">&#10004;</button>
         </div>
 
         <div id="tab4" class="tab-content">
-            <h3 id="title">Ask Questions</h3>
-
-            <div id="chatWindow" class="chat-window"></div>
-
-            <div class="form-group">
-                <label>I’m here — ask away</label>
-                <textarea id="conversationBox" placeholder="You can ask me anything you’re curious about."></textarea>
-                <small class="error">This field is required</small>
-            </div>
-
-            <button id="sendButton" class="icon_button">&#11014;</button>
-        </div>
-
-        <div id="tab5" class="tab-content">
             <h3 id="title">Setting</h3>
 
             <div class="form-group">
