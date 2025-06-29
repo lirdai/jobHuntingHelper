@@ -11,12 +11,12 @@ let resumePDF = null;
 let resumeDocx = null;
 let resumeOpenAI = null;
 let fileName = null;
+let chatBox = null;
 let companyInfo = {
   company: null,
   position: null,
   companyDesc: null,
 };
-let additionalInfo;
 let fonts = {};
 const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
 
@@ -45,6 +45,81 @@ function generatePDF(data) {
 
   doc.save("Resume.pdf");
 }
+
+const getFontStyle = (name) => {
+  if (!name) return "normal";
+  if (name.toLowerCase().includes("bold")) return "bold";
+  if (name.toLowerCase().includes("italic")) return "italic";
+  return "normal";
+};
+
+const pdfRenderPage = (url) => {
+  var pdfDoc = null,
+    pageNum = 1,
+    pageRendering = false,
+    pageNumPending = null,
+    scale = 0.8,
+    canvas = document.getElementById("the-canvas"),
+    ctx = canvas.getContext("2d");
+
+  function renderPage(num) {
+    pageRendering = true;
+    pdfDoc.getPage(num).then(function (page) {
+      var viewport = page.getViewport({ scale: scale });
+      canvas.height = viewport.height;
+      canvas.width = viewport.width;
+
+      var renderContext = {
+        canvasContext: ctx,
+        viewport: viewport,
+      };
+      var renderTask = page.render(renderContext);
+
+      renderTask.promise.then(function () {
+        pageRendering = false;
+        if (pageNumPending !== null) {
+          renderPage(pageNumPending);
+          pageNumPending = null;
+        }
+      });
+    });
+
+    document.getElementById("page_num").textContent = num;
+  }
+
+  function queueRenderPage(num) {
+    if (pageRendering) {
+      pageNumPending = num;
+    } else {
+      renderPage(num);
+    }
+  }
+
+  function onPrevPage() {
+    if (pageNum <= 1) {
+      return;
+    }
+    pageNum--;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById("prev").addEventListener("click", onPrevPage);
+
+  function onNextPage() {
+    if (pageNum >= pdfDoc.numPages) {
+      return;
+    }
+    pageNum++;
+    queueRenderPage(pageNum);
+  }
+  document.getElementById("next").addEventListener("click", onNextPage);
+
+  pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
+    pdfDoc = pdfDoc_;
+    document.getElementById("page_count").textContent = pdfDoc.numPages;
+
+    renderPage(pageNum);
+  });
+};
 
 async function generateDocx(data, selectionType) {
   const htmlString = `${data}`;
@@ -249,81 +324,6 @@ async function generateDocx(data, selectionType) {
   a.click();
 }
 
-const getFontStyle = (name) => {
-  if (!name) return "normal";
-  if (name.toLowerCase().includes("bold")) return "bold";
-  if (name.toLowerCase().includes("italic")) return "italic";
-  return "normal";
-};
-
-const pdfRenderPage = (url) => {
-  var pdfDoc = null,
-    pageNum = 1,
-    pageRendering = false,
-    pageNumPending = null,
-    scale = 0.8,
-    canvas = document.getElementById("the-canvas"),
-    ctx = canvas.getContext("2d");
-
-  function renderPage(num) {
-    pageRendering = true;
-    pdfDoc.getPage(num).then(function (page) {
-      var viewport = page.getViewport({ scale: scale });
-      canvas.height = viewport.height;
-      canvas.width = viewport.width;
-
-      var renderContext = {
-        canvasContext: ctx,
-        viewport: viewport,
-      };
-      var renderTask = page.render(renderContext);
-
-      renderTask.promise.then(function () {
-        pageRendering = false;
-        if (pageNumPending !== null) {
-          renderPage(pageNumPending);
-          pageNumPending = null;
-        }
-      });
-    });
-
-    document.getElementById("page_num").textContent = num;
-  }
-
-  function queueRenderPage(num) {
-    if (pageRendering) {
-      pageNumPending = num;
-    } else {
-      renderPage(num);
-    }
-  }
-
-  function onPrevPage() {
-    if (pageNum <= 1) {
-      return;
-    }
-    pageNum--;
-    queueRenderPage(pageNum);
-  }
-  document.getElementById("prev").addEventListener("click", onPrevPage);
-
-  function onNextPage() {
-    if (pageNum >= pdfDoc.numPages) {
-      return;
-    }
-    pageNum++;
-    queueRenderPage(pageNum);
-  }
-  document.getElementById("next").addEventListener("click", onNextPage);
-
-  pdfjsLib.getDocument(url).promise.then(function (pdfDoc_) {
-    pdfDoc = pdfDoc_;
-    document.getElementById("page_count").textContent = pdfDoc.numPages;
-
-    renderPage(pageNum);
-  });
-};
-
 function updateSidePanel(matches) {
   if (!document.getElementById("my-extension-panel")) {
     return;
@@ -334,78 +334,12 @@ function updateSidePanel(matches) {
   const companyDesc = document.getElementById("companyDesc");
 
   company.value = matches?.company?.innerText || "";
-
-  if (company.value === "") {
-    company.style.border = "1px solid #DC143C";
-  } else {
-    company.style.border = "1px solid #000";
-  }
-
   position.value = matches?.position?.innerText || "";
-
-  if (position.value === "") {
-    position.style.border = "1px solid #DC143C";
-  } else {
-    position.style.border = "1px solid #000";
-  }
-
   companyDesc.value = matches?.companyDesc?.innerText || "";
-
-  if (companyDesc.value === "") {
-    companyDesc.style.border = "1px solid #DC143C";
-  } else {
-    companyDesc.style.border = "1px solid #000";
-  }
 
   companyInfo.company = company.value;
   companyInfo.position = position.value;
   companyInfo.companyDesc = companyDesc.value;
-}
-
-function generateFilename(sectionType) {
-  const fileMap = {
-    resume: "resume.docx",
-    cover: "cover_letter.docx",
-    achievement: "achievement.docx",
-    why: "why_us.docx",
-  };
-
-  return fileMap[sectionType] || "document.docx";
-}
-
-function getSystemMessage(sectionType) {
-  let base = `你是一位职业规划顾问，负责帮助用户优化简历内容。用户会提供他们的简历信息、应聘职位、公司介绍，以及可能包含的个人亮点或特长。
-  你的任务是根据这些信息，优化并改写简历内容，使其更符合目标职位的要求，更具专业性和吸引力。
-  简历上如果有skills必须要多match工作招聘上的要求。
-  你的回复必须采用简历模板格式，并以 HTML 编写。要严格按照原来的格式，不可以自己乱添加删减空格。但请注意，你只能返回 <body> 标签内的内容，不能包含 <html>、<head> 或 <body> 标签本身。
-  此外，简历中提及的职位必须与用户所应聘的岗位保持一致。`;
-
-  if (sectionType === "cover") {
-    base = `你是一位职业规划顾问，负责为用户撰写英文求职信（Cover Letter）。
-      用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
-
-      请根据这些信息，撰写一封不超过150字的英文求职信，要求如下：  
-      - 麻烦写下公司名字${companyInfo.company}
-      - 采用单段形式，语言简洁、正式且具有说服力  
-      - 明确突出用户与目标岗位的匹配度以及应聘动机  
-      - 结构完整，包含开头问候（greeting）、正文内容、标准结尾语句（closing statement）和签名（sign off，使用用户简历上的名字）  
-      - 使用简历模板的HTML格式返回内容，仅包含<body>标签内部内容，不得包含<html>、<head>或<body>标签本身  
-      - 求职信格式应清晰，包含适当的段落或换行标签（如<p>、<br>等）以提升可读性  
-
-      请根据上述要求生成Cover Letter正文的HTML代码。`;
-  } else if (sectionType === "achievement") {
-    base = `你是一位职业规划顾问，负责帮助用户提炼并撰写英文版的个人成就总结。用户将提供其简历内容、应聘职位、公司信息，以及可能包含的个人亮点或特长。
-    请根据这些信息，撰写一段不超过 150 字的英文描述，用自然段形式呈现。
-    内容应突出用户最具代表性的个人成就，真实可信，尽可能结合简历中的具体经历进行量化说明，使其更具说服力与专业性。
-    请使用简历模板的 HTML 格式返回内容，仅限 <body> 标签内部的部分，不得包含 <html>、<head> 或 <body> 标签本身。`;
-  } else if (sectionType === "why") {
-    base = `你是一位职业规划顾问，负责帮助用户撰写英文版的“为什么选择我们公司”陈述。用户将提供其简历信息、应聘职位、目标公司介绍，以及可能的个人优势或特长。
-    请根据这些信息，撰写一段不超过 150 字的英文自然段，说明用户选择该公司的理由。
-    内容应体现用户对公司的了解，结合公司文化、使命或项目亮点，并突出其与用户背景或价值观的契合。
-    请以简历模板的 HTML 格式返回，仅限 <body> 标签内部的内容，不得包含 <html>、<head> 或 <body> 标签本身。`;
-  }
-
-  return base;
 }
 
 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -432,212 +366,66 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
-document.getElementById("company").addEventListener("change", (e) => {
-  const company = document.getElementById("company");
-  if (e.target.value === "") {
-    company.style.border = "1px solid #DC143C";
-  } else {
-    company.style.border = "1px solid #000";
-  }
+function generateFilename(sectionType) {
+  const fileMap = {
+    resume: "resume.docx",
+    cover: "cover_letter.docx",
+    achievement: "achievement.docx",
+    why_us: "why_us.docx",
+    why_role: "why_role.docx",
+    goal: "goal.docx",
+    thank_you: "thank_you.docx",
+    follow_up: "follow_up.docx",
+  };
 
+  return fileMap[sectionType] || "document.docx";
+}
+
+function generateFileFormat(sectionType) {
+  const fileMap = {
+    resume: `Please revise the resume to closely match the job and company information: ${companyInfo}. Pay special attention to aligning skills, job titles, and company relevance. Follow the provided resume template exactly and preserve the original structure.`,
+    cover: `Please write a cover letter (150–200 words) in a single paragraph, using a complete structure: greeting (e.g., "Dear..."), body, closing (e.g., "Regards..."), and signature. Incorporate the company name and job title from: ${companyInfo}. The tone should be formal yet natural, in English.`,
+    achievement: `Describe my most significant professional achievement (150–200 words) in one paragraph, in English. The tone should be professional, concise, and slightly conversational.`,
+    why_us: `Explain why I want to work for this company (150–200 words) in one paragraph, in English. Refer to their culture, mission, or projects as described in: ${companyInfo}, and connect them to my background and values.`,
+    why_role: `Describe why I am applying for this specific role (150–200 words) in one paragraph, using the job details from: ${companyInfo}. Base your answer on my experience, and ensure the tone is formal, clear, and natural.`,
+    goal: `Describe my 5–10 year career goals in one paragraph (150–200 words), based on my current background. The tone should be clear, future-oriented, and professionally personal.`,
+    thank_you: `Write a thank-you letter (150–200 words) in one paragraph, using the company name and position from: ${companyInfo}. The letter should include a greeting (e.g., "Dear..."), body, closing (e.g., "Regards..."), and signature. Use a professional and slightly conversational tone.`,
+    follow_up: `Write a follow-up letter (150–200 words) in one paragraph, using the company name and position from: ${companyInfo}. The letter should include a greeting, body, closing, and signature. Keep the tone professional, polite, and concise.`,
+  };
+
+  return fileMap[sectionType];
+}
+
+document.getElementById("company").addEventListener("change", (e) => {
   companyInfo.company = e.target.value;
 });
 
 document.getElementById("position").addEventListener("change", (e) => {
-  const position = document.getElementById("position");
-  if (e.target.value === "") {
-    position.style.border = "1px solid #DC143C";
-  } else {
-    position.style.border = "1px solid #000";
-  }
-
   companyInfo.position = e.target.value;
 });
 
 document.getElementById("companyDesc").addEventListener("change", (e) => {
-  const companyDesc = document.getElementById("companyDesc");
-  if (e.target.value === "") {
-    companyDesc.style.border = "1px solid #DC143C";
-  } else {
-    companyDesc.style.border = "1px solid #000";
-  }
-
   companyInfo.companyDesc = e.target.value;
 });
 
-document.getElementById("fileInput").addEventListener("change", () => {
-  const fileInput = document.getElementById("fileInput");
-  if (
-    fileInput.value === "" ||
-    fileInput.value === null ||
-    fileInput.value === undefined
-  ) {
-    fileInput.style.border = "1px solid #DC143C";
-  } else {
-    fileInput.style.border = "1px solid #000";
-  }
+document.getElementById("chatBox").addEventListener("change", (e) => {
+  chatBox = e.target.value;
 });
 
-document.getElementById("aikey").addEventListener("change", (e) => {
-  const aikey = document.getElementById("aikey");
-  if (e.target.value === "") {
-    aikey.style.border = "1px solid #DC143C";
+document.getElementById("fileInput").addEventListener("change", (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  if (file.name.toLowerCase().endsWith(".pdf")) {
+    document.getElementById("controls").style.display = "block";
   } else {
-    aikey.style.border = "1px solid #000";
+    document.getElementById("controls").style.display = "none";
   }
-});
-
-document.getElementById("additionalInfo").addEventListener("change", (e) => {
-  const addition = document.getElementById("additionalInfo");
-  if (e.target.value === "") {
-    addition.style.border = "1px solid #DC143C";
-  } else {
-    addition.style.border = "1px solid #000";
-  }
-
-  additionalInfo = e.target.value;
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  const createFileBtn = document.getElementById("createFile");
-
-  createFileBtn.addEventListener("click", async () => {
-    createFileBtn.disabled = true;
-    document.getElementById("overlay").style.display = "block";
-    document.body.classList.add("locked");
-
-    try {
-      const savedMsg = document.getElementById("saved-msg");
-      const file = document.getElementById("fileInput");
-      const company = document.getElementById("company");
-      const position = document.getElementById("position");
-      const companyDesc = document.getElementById("companyDesc");
-      const key = document.getElementById("aikey");
-      const select = document.getElementById("infoSelect");
-
-      const fileIfOk = file?.value || resumeDocx;
-
-      const checkIfOk =
-        fileIfOk &&
-        company.value !== "" &&
-        position.value !== "" &&
-        companyDesc.value !== "" &&
-        key.value !== "";
-
-      console.log(
-        "companyInfo",
-        companyInfo,
-        "resumeDocx",
-        resumeDocx,
-        "resumeOpenAI",
-        resumeOpenAI,
-      );
-
-      if (checkIfOk) {
-        const keyCheck = key.value.trim();
-        if (!keyCheck.startsWith("sk-")) {
-          alert("Please enter a valid OpenAI API key (starting with 'sk-')");
-          return;
-        }
-
-        chrome.storage.local.get(["openaiKey"]).then((result) => {
-          if (result?.openaiKey === key?.value) return;
-          else {
-            const confirmed = confirm(
-              "Would you like us to remember your OpenAI API key?",
-            );
-            if (confirmed) {
-              chrome.storage.local.set({ openaiKey: key.value }).then(() => {
-                savedMsg.style.display = "block";
-                setTimeout(() => {
-                  savedMsg.style.display = "none";
-                }, 2000);
-              });
-            } else {
-              alert("OpenAI API key was not saved");
-            }
-          }
-        });
-
-        document.getElementById("loading").style.display = "flex";
-
-        if (fileName.endsWith(".pdf")) {
-          generatePDF(resumePDF);
-        } else if (fileName.endsWith(".docx")) {
-          const response = await fetch(
-            "https://api.openai.com/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${key.value}`,
-              },
-              body: JSON.stringify({
-                model: "gpt-4.1",
-                messages: [
-                  {
-                    role: "system",
-                    content: getSystemMessage(select.value),
-                  },
-                  {
-                    role: "user",
-                    content: `这是我的简历模版，${resumeDocx}。这是我的简历，${resumeOpenAI}。这是公司的信息，${companyInfo}。这是我的个人特色介绍，也可能是空白，${additionalInfo}`,
-                  },
-                ],
-              }),
-            },
-          );
-
-          const data = await response.json();
-          document.getElementById("loading").style.display = "none";
-
-          if (data?.choices?.[0]?.message?.content) {
-            generateDocx(data?.choices?.[0]?.message?.content, select.value);
-          }
-        }
-      } else {
-        if (!fileIfOk) {
-          file.style.border = "1px solid #DC143C";
-          alert("Please upload your resume");
-        }
-        if (company.value === "") {
-          company.style.border = "1px solid #DC143C";
-          alert("Please provide the company name");
-        }
-        if (position.value === "") {
-          position.style.border = "1px solid #DC143C";
-          alert("Please provide the job title");
-        }
-        if (companyDesc.value === "") {
-          companyDesc.style.border = "1px solid #DC143C";
-          alert("Please provide a company introduction");
-        }
-        if (key.value === "") {
-          key.style.border = "1px solid #DC143C";
-          alert("Please enter your OpenAI API key");
-        }
-      }
-    } catch (error) {
-      console.error("Upload failed:", error);
-      alert("Upload failed.");
-    } finally {
-      document.getElementById("overlay").style.display = "none";
-      document.body.classList.remove("locked");
-      createFileBtn.disabled = false;
-    }
-  });
-
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      createFileBtn.click();
-    }
-  });
 });
 
 document.getElementById("fileInput").addEventListener("click", () => {
   const fileInput = document.getElementById("fileInput");
   fileInput.value = "";
-  fileInput.style.border = "1px solid #DC143C";
 
   chrome.storage.local.remove("uploadedResume", () => {});
   chrome.storage.local.remove("uploadedHtmlResume", () => {});
@@ -768,6 +556,144 @@ document
   });
 
 document.addEventListener("DOMContentLoaded", () => {
+  const createFileBtn = document.getElementById("createFile");
+
+  createFileBtn.addEventListener("click", async () => {
+    createFileBtn.disabled = true;
+    document.getElementById("overlay").style.display = "block";
+    document.body.classList.add("locked");
+
+    try {
+      const file = document.getElementById("fileInput");
+      const company = document.getElementById("company");
+      const position = document.getElementById("position");
+      const companyDesc = document.getElementById("companyDesc");
+      const taileredCommand = document.getElementById("chatBox");
+      const key = document.getElementById("aikey");
+      const savedMsg = document.getElementById("saved-msg");
+      const select = document.getElementById("infoSelect");
+
+      const fileIfOk = file?.value || resumeDocx;
+
+      const checkIfOk =
+        fileIfOk &&
+        company.value !== "" &&
+        position.value !== "" &&
+        companyDesc.value !== "" &&
+        taileredCommand.value !== "" &&
+        key.value !== "";
+
+      if (checkIfOk) {
+        const keyCheck = key.value.trim();
+        if (!keyCheck.startsWith("sk-")) {
+          alert("Please enter a valid OpenAI API key (starting with 'sk-')");
+          return;
+        }
+
+        chrome.storage.local.get(["openaiKey"]).then((result) => {
+          if (result?.openaiKey === key?.value) return;
+          else {
+            const confirmed = confirm(
+              "Would you like us to remember your OpenAI API key?",
+            );
+            if (confirmed) {
+              chrome.storage.local.set({ openaiKey: key.value }).then(() => {
+                savedMsg.style.display = "block";
+                setTimeout(() => {
+                  savedMsg.style.display = "none";
+                }, 2000);
+              });
+            } else {
+              alert("OpenAI API key was not saved");
+            }
+          }
+        });
+
+        document.getElementById("loading").style.display = "flex";
+
+        if (fileName.endsWith(".pdf")) {
+          generatePDF(resumePDF);
+        } else if (fileName.endsWith(".docx")) {
+          console.log("chatBox", chatBox);
+          const response = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${key.value}`,
+              },
+              body: JSON.stringify({
+                model: "gpt-4.1",
+                temperature: 1,
+                top_p: 0.9,
+                messages: [
+                  {
+                    role: "system",
+                    content: `
+                        You are a career advisor who helps users improve resumes, cover letters, and other job application content.
+                        Please generate a ${generateFileFormat(select.value)}, based on the provided information.
+                        The user will provide three inputs:
+                        - Resume template: ${resumeDocx}
+                        - Resume content: ${resumeOpenAI}
+                        - Job and company information: ${companyInfo}   
+                     
+                        Feel free to update job titles, company names, skills, values, or any key details as needed to closely match the target role and company.
+                        Your response must follow a resume template format and be written in HTML. 
+                        Only return the content within the <body> tag — do not include <html>, <head>, or the <body> tags themselves.
+                        Strictly preserve the original format and spacing. Do not arbitrarily add, remove, or modify content structure.
+                        If a specific task is provided, it should take precedence over the default instructions.
+                        Your specific task is as follows:
+                        ${chatBox}
+                      `,
+                  },
+                ],
+              }),
+            },
+          );
+
+          const data = await response.json();
+          document.getElementById("loading").style.display = "none";
+
+          if (data?.choices?.[0]?.message?.content) {
+            generateDocx(data?.choices?.[0]?.message?.content, select.value);
+          }
+        }
+      } else {
+        if (!fileIfOk) {
+          alert("Please upload your resume");
+        } else if (company.value === "") {
+          alert("Please provide the company name");
+        } else if (position.value === "") {
+          alert("Please provide the job title");
+        } else if (companyDesc.value === "") {
+          alert("Please provide a company introduction");
+        } else if (taileredCommand.value === "") {
+          alert(
+            "Please share more details so ChatGPT can better personalize the content",
+          );
+        } else if (key.value === "") {
+          alert("Please enter your OpenAI API key");
+        }
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+      alert("Upload failed.");
+    } finally {
+      document.getElementById("overlay").style.display = "none";
+      document.body.classList.remove("locked");
+      createFileBtn.disabled = false;
+    }
+  });
+
+  document.getElementById("tab3").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      createFileBtn.click();
+    }
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
   const key = document.getElementById("aikey");
 
   chrome.storage.local.get(["openaiKey"]).then((result) => {
@@ -807,7 +733,7 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   const tabs = document.querySelectorAll(".tab");
   const contents = document.querySelectorAll(".tab-content");
-  const forwardButtons = document.querySelectorAll(".icon_button");
+  const forwardButtons = document.querySelectorAll(".forward_button");
 
   function activateTab(index) {
     tabs.forEach((t) => t.classList.remove("active"));
@@ -844,7 +770,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" || e.key === "ArrowRight") {
+    if (e.key === "ArrowRight") {
       goToNextTab();
     } else if (e.key === "ArrowLeft") {
       goToPreviousTab();
@@ -852,13 +778,22 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-document.getElementById("fileInput").addEventListener("change", (event) => {
-  const file = event.target.files[0];
-  if (!file) return;
+document.addEventListener("DOMContentLoaded", () => {
+  const tabs = document.querySelectorAll(".tab");
 
-  if (file.name.toLowerCase().endsWith(".pdf")) {
-    document.getElementById("controls").style.display = "block";
-  } else {
-    document.getElementById("controls").style.display = "none";
+  tabs.forEach((tab) => {
+    const fullText = tab.textContent.trim();
+    tab.dataset.full = fullText;
+    tab.dataset.short = fullText[0].toUpperCase();
+  });
+
+  function updateTabTextByWidth() {
+    const isSmall = window.innerWidth < 499;
+    tabs.forEach((tab) => {
+      tab.textContent = isSmall ? tab.dataset.short : tab.dataset.full;
+    });
   }
+
+  updateTabTextByWidth();
+  window.addEventListener("resize", updateTabTextByWidth);
 });

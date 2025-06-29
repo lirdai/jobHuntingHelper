@@ -96,31 +96,60 @@
             margin-bottom: 30px;
         }
 
-        #fileInput,
-        #company,
-        #position,
-        #companyDesc,
-        #aikey,
-        #additionalInfo,
-        #infoSelect {
-            display: block;
+        .form-group {
+            margin-bottom: 1rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+            visibility: hidden;
+        }
+
+        input:invalid+.error,
+        textarea:invalid+.error {
+            visibility: visible;
+        }
+
+        input,
+        textarea,
+        select {
+            padding: 0.5rem;
+            border: 1px solid #ccc;
             border-radius: 6px;
-            width: calc(100% - 24px);
-            margin-bottom: 12px;
-            border: 1px solid #15151566;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
         }
 
-        #company,
-        #position,
-        #aikey,
-        #infoSelect {
-            height: 50px;
-        }
-
-        #companyDesc,
-        #additionalInfo {
-            height: 250px;
+        textarea {
+            height: 100px;
             resize: none;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.15);
+        }
+
+        .chat-window {
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            padding: 12px;
+            height: 320px;
+            overflow-y: auto;
+            background: #fff;
+            margin-bottom: 32px;
         }
 
         .icon_button {
@@ -145,26 +174,36 @@
         }
 
         #createFile,
-        #forwardButton {
+        #forwardButton,
+        #sendButton {
             color: green;
         }
 
         #createFile:hover,
-        #forwardButton:hover {
+        #forwardButton:hover,
+        #sendButton:hover {
             background-color: #e6ffe6;
             border-color: darkgreen;
         }
 
         #createFile:focus,
-        #forwardButton:focus {
+        #forwardButton:focus,
+        #sendButton:focus {
             outline: none;
             box-shadow: 0 0 5px rgba(0, 128, 0, 0.5);
         }
 
         #createFile:active,
-        #forwardButton:active {
+        #forwardButton:active,
+        #sendButton:active {
             background-color: #ccffcc;
             transform: scale(0.98);
+        }
+
+        .tabs-wrapper {
+            position: relative;
+            overflow: hidden;
+            border-bottom: 1px solid #ccc;
         }
 
         .tabs {
@@ -176,7 +215,9 @@
 
         #tab1,
         #tab2,
-        #tab3 {
+        #tab3,
+        #tab4,
+        #tab5 {
             max-height: 800px;
             overflow: auto;
         }
@@ -188,6 +229,13 @@
             background-color: transparent;
             cursor: pointer;
             transition: background-color 0.2s ease, border 0.2s ease;
+        }
+
+        @media (max-width: 499px) {
+            .tab {
+                font-size: 14px;
+                font-weight: bold;
+            }
         }
 
         .tab:hover {
@@ -205,7 +253,6 @@
             display: none;
             padding-top: 10px;
             background-color: white;
-
             max-width: 100%;
             word-break: break-word;
             overflow-wrap: break-word;
@@ -213,6 +260,33 @@
 
         .tab-content.active {
             display: block;
+        }
+
+        .scroll-hint {
+            position: absolute;
+            left: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            padding-left: 10px;
+            font-size: 16px;
+            pointer-events: none;
+        }
+
+        .scroll-hint.left,
+        .scroll-hint.right {
+            display: none;
+        }
+
+        @media (max-width: 499px) {
+            .scroll-hint.left {
+                display: block;
+            }
+        }
+
+        @media (min-width: 500px) {
+            .scroll-hint.right {
+                display: block;
+            }
         }
 
         #loading {
@@ -249,16 +323,25 @@
             <div id="loading" style="display: none;">Wating for response...</div>
         </div>
 
-        <div class="tabs">
-            <div class="tab active" data-tab="tab1">Resume</div>
-            <div class="tab" data-tab="tab2">Job</div>
-            <div class="tab" data-tab="tab3">Addition</div>
+        <div class="tabs-wrapper">
+            <div class="scroll-hint left" id="leftHint">👈</div>
+            <div class="scroll-hint right" id="rightHint">👉</div>
+
+            <div class="tabs" id="tabs">
+                <div class="tab active" data-tab="tab1">Resume</div>
+                <div class="tab" data-tab="tab2">Job</div>
+                <div class="tab" data-tab="tab3">Documents</div>
+                <div class="tab" data-tab="tab4">Chat</div>
+                <div class="tab" data-tab="tab5">Settings</div>
+            </div>
         </div>
 
         <div id="tab1" class="tab-content active">
-            <label for="fileInput" id="customFileInputLabel">📎 Upload Resume</label>
-            <input type="file" id="fileInput" accept=".docx" required style="display:none" />
-            <pre>Accepted file types: .docx</pre>
+            <div class="form-group">
+                <label for="fileInput" id="customFileInputLabel">📎 Upload Resume</label>
+                <input type="file" id="fileInput" accept=".docx" required style="display:none" />
+                <pre>Accepted file types: .docx</pre>
+            </div>
 
             <div id="controls">
                 <button id="prev">Previous</button>
@@ -270,45 +353,84 @@
             <canvas id="the-canvas"></canvas>
             <div id="output"></div>
 
-            <button id="forwardButton" class="icon_button">&#10148;</button>
+            <button id="forwardButton" class="icon_button forward_button">&#10148;</button>
         </div>
 
         <div id="tab2" class="tab-content">
             <h3 id="title">Job Information</h3>
 
-            <label>Company</label>
-            <input type="text" id="company" required placeholder="Required" />
+            <div class="form-group">
+                <label>Company</label>
+                <input type="text" id="company" required placeholder="Company" />
+                <small class="error">This field is required</small>
+            </div>
 
-            <label>Position</label>
-            <input type="text" id="position" required placeholder="Required" />
+            <div class="form-group">
+                <label>Position</label>
+                <input type="text" id="position" required placeholder="Position" />
+                <small class="error">This field is required</small>
+            </div>
 
-            <label>Company Description</label>
-            <textarea id="companyDesc" required placeholder="Required"></textarea>
+            <div class="form-group">
+                <label>Company Description</label>
+                <textarea id="companyDesc" required placeholder="Company Description"></textarea>
+                <small class="error">This field is required</small>
+            </div>
 
-            <button id="forwardButton" class="icon_button">&#10148;</button>
+            <button id="forwardButton" class="icon_button forward_button">&#10148;</button>
         </div>
 
         <div id="tab3" class="tab-content">
-            <h3 id="title">Additional Information</h3>
+            <h3 id="title">Download Area</h3>
 
-            <label>OpenAI Key</label>
-            <input type="password" id="aikey" required placeholder="Required" />
-            <pre id="saved-msg" style="display:none; color: green;">OpenAI API key saved successfully</pre>
+            <div class="form-group">
+                <label>Tell ChatGPT what you want</label>
+                <textarea id="chatBox" required placeholder="Help me think clearly, but keep answers short"></textarea>
+                <small class="error">This field is required</small>
+            </div>
 
-            <label>More about yourself</label>
-            <textarea id="additionalInfo" placeholder="Optional"></textarea>
-
-            <label for="infoSelect">Select the file to generate:</label>
-            <select id="infoSelect">
-                <option value="resume">Resume</option>
-                <option value="cover">Cover Letter</option>
-                <option value="achievement">Biggest Achievement</option>
-                <option value="why">Why Us</option>
-            </select>
+            <div class="form-group">
+                <label for="infoSelect">Select the file to generate:</label>
+                <select id="infoSelect">
+                    <option value="resume">Resume</option>
+                    <option value="cover">Cover Letter</option>
+                    <option value="achievement">Biggest Achievement</option>
+                    <option value="why_us">Why Us</option>
+                    <option value="why_role">Why This Role</option>
+                    <option value="goal">Future Goals</option>
+                    <option value="thank_you">Thank you Letter</option>
+                    <option value="follow_up">Follow up Letter</option>
+                </select>
+                <small class="error">This field is required</small>
+            </div>
 
             <button id="createFile" class="icon_button">&#10004;</button>
         </div>
-    </div>
+
+        <div id="tab4" class="tab-content">
+            <h3 id="title">Ask Questions</h3>
+
+            <div id="chatWindow" class="chat-window"></div>
+
+            <div class="form-group">
+                <label>I’m here — ask away</label>
+                <textarea id="conversationBox" placeholder="You can ask me anything you’re curious about."></textarea>
+                <small class="error">This field is required</small>
+            </div>
+
+            <button id="sendButton" class="icon_button">&#11014;</button>
+        </div>
+
+        <div id="tab5" class="tab-content">
+            <h3 id="title">Setting</h3>
+
+            <div class="form-group">
+                <label>OpenAI Key</label>
+                <input type="password" id="aikey" required placeholder="OpenAI Key" />
+                <small class="error">This field is required</small>
+                <pre id="saved-msg" style="display:none; color: green;">OpenAI API key saved successfully</pre>
+            </div>
+        </div>
 </body>
 
 <script src="libs/pdf.mjs" type="module"></script>
