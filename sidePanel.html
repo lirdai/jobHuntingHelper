@@ -151,6 +151,7 @@
             overflow-y: auto;
             background: #fff;
             margin-bottom: 32px;
+            font-size: large;
         }
 
         .chat-message {
@@ -209,27 +210,27 @@
 
         #createFile,
         #forwardButton,
-        #sendButton {
+        #updateSetting {
             color: green;
         }
 
         #createFile:hover,
         #forwardButton:hover,
-        #sendButton:hover {
+        #updateSetting:hover {
             background-color: #e6ffe6;
             border-color: darkgreen;
         }
 
         #createFile:focus,
         #forwardButton:focus,
-        #sendButton:focus {
+        #updateSetting:focus {
             outline: none;
             box-shadow: 0 0 5px rgba(0, 128, 0, 0.5);
         }
 
         #createFile:active,
         #forwardButton:active,
-        #sendButton:active {
+        #updateSetting:active {
             background-color: #ccffcc;
             transform: scale(0.98);
         }
@@ -548,11 +549,11 @@
             </div>
 
             <div class="form-group">
-                <label>Message Behavior</label>
+                <label>Chat Mode</label>
                 <select id="chatMode">
-                    <option value="conversation">Conversation Mode (with history)</option>
                     <option value="single">Single-turn Mode (no history)</option>
                     <option value="perTask">Clear History Per Task</option>
+                    <option value="conversation">Conversation Mode (with history)</option>
                 </select>
             </div>
 

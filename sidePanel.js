@@ -17,6 +17,7 @@ let companyInfo = {
   position: null,
   companyDesc: null,
 };
+let messages = [];
 let fonts = {};
 const { Document, Packer, Paragraph, TextRun, AlignmentType } = docx;
 
@@ -332,6 +333,7 @@ function updateSidePanel(matches) {
   const company = document.getElementById("company");
   const position = document.getElementById("position");
   const companyDesc = document.getElementById("companyDesc");
+  const chatMode = document.getElementById("chatMode");
 
   company.value = matches?.company?.innerText || "";
   position.value = matches?.position?.innerText || "";
@@ -340,6 +342,11 @@ function updateSidePanel(matches) {
   companyInfo.company = company.value;
   companyInfo.position = position.value;
   companyInfo.companyDesc = companyDesc.value;
+
+  if (chatMode.value === "perTask") {
+    messages = [];
+    clearChatWindow();
+  }
 }
 
 chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
@@ -534,9 +541,6 @@ document
         const fullText = result.value;
         const html = resultWithStyle.value;
 
-        console.log("html", html);
-        console.log("fullText", fullText);
-
         resumeDocx = html;
         resumeOpenAI = fullText;
 
@@ -584,20 +588,40 @@ function checkChatWindowEmpty() {
   }
 }
 
-function addMessage(userText, assistantHTML) {
+function clearChatWindow() {
   const chatWindow = document.getElementById("chat_window");
+  chatWindow.innerHTML = "";
+  checkChatWindowEmpty();
+}
+
+function addMessageChatWindow(userText, assistantHTML) {
+  const chatWindow = document.getElementById("chat_window");
+  const chatMode = document.getElementById("chatMode");
 
   if (userText) {
     const userMsg = document.createElement("div");
     userMsg.className = "chat-message user-message";
     userMsg.textContent = userText;
     chatWindow.appendChild(userMsg);
+    if (chatMode.value !== "single") {
+      messages.push({
+        role: "user",
+        content: userText,
+      });
+    }
   }
   if (assistantHTML) {
     const assistantMsg = document.createElement("div");
     assistantMsg.className = "chat-message assistant-message";
     assistantMsg.innerHTML = assistantHTML;
     chatWindow.appendChild(assistantMsg);
+
+    if (chatMode.value !== "single") {
+      messages.push({
+        role: "assistant",
+        content: assistantHTML,
+      });
+    }
   }
 
   checkChatWindowEmpty();
@@ -609,8 +633,25 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 document.addEventListener("DOMContentLoaded", () => {
+  const updateSettingBn = document.getElementById("updateSetting");
+  const chatMode = document.getElementById("chatMode");
+
+  updateSettingBn.addEventListener("click", async () => {
+    chrome.storage.local.set({ chatMode: chatMode.value }, () => {});
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
   const createFileBtn = document.getElementById("createFile");
   const toggle = document.getElementById("modeToggle");
+  const file = document.getElementById("fileInput");
+  const company = document.getElementById("company");
+  const position = document.getElementById("position");
+  const companyDesc = document.getElementById("companyDesc");
+  const taileredCommand = document.getElementById("chatBox");
+  const key = document.getElementById("aikey");
+  const savedMsg = document.getElementById("saved-msg");
+  const select = document.getElementById("infoSelect");
 
   createFileBtn.addEventListener("click", async () => {
     createFileBtn.disabled = true;
@@ -618,15 +659,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("locked");
 
     try {
-      const file = document.getElementById("fileInput");
-      const company = document.getElementById("company");
-      const position = document.getElementById("position");
-      const companyDesc = document.getElementById("companyDesc");
-      const taileredCommand = document.getElementById("chatBox");
-      const key = document.getElementById("aikey");
-      const savedMsg = document.getElementById("saved-msg");
-      const select = document.getElementById("infoSelect");
-
       const fileIfOk = file?.value || resumeDocx;
 
       const checkIfOk =
@@ -663,7 +695,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         });
 
-        addMessage(chatBox, null);
+        addMessageChatWindow(chatBox, null);
         taileredCommand.value = "";
         document.getElementById("loading").style.display = "flex";
 
@@ -687,43 +719,44 @@ document.addEventListener("DOMContentLoaded", () => {
                     role: "system",
                     content: toggle.checked
                       ? `The user will provide four inputs:
-                        - Resume template: ${resumeDocx}
-                        - Resume content: ${resumeOpenAI}
-                        - Job and company information, provided as an object representing the current job application the user is pursuing:
-                          - company: the target company name ${companyInfo.company}
-                          - position: the job title being applied for ${companyInfo.position}
-                          - companyDescription: a brief description of the company, including its culture, values, or business focus ${companyInfo.companyDesc}
-                        - Optional chat context or instructions: ${chatBox}
-
-                        You are a professional career advisor. Your task is to engage in a conversation and answer the user’s career-related questions — such as how to improve their resume, job fit analysis, or how to write a cover letter — **without generating or editing any resume or content directly**.
-
-                        You must not create, modify, or reformat the resume unless the ${chatBox} input explicitly instructs you to do so.
-
-                        Your response must:
-                        - Be written in HTML format.
-                        - Only return the content within the <body> tag — do not include <html>, <head>, or <body> tags themselves.
-                        - If a resume is to be generated (only if explicitly asked), strictly follow the provided resume template, preserving original structure and spacing.
-                        `
+                      - Resume template: ${resumeDocx}
+                      - Resume content: ${resumeOpenAI}
+                      - Job and company information, provided as an object representing the current job application the user is pursuing:
+                        - company: the target company name ${companyInfo.company}
+                        - position: the job title being applied for ${companyInfo.position}
+                        - companyDescription: a brief description of the company, including its culture, values, or business focus ${companyInfo.companyDesc}
+                      - Optional chat context or instructions: ${chatBox}
+              
+                      You are a professional career advisor. Your task is to engage in a conversation and answer the user’s career-related questions — such as how to improve their resume, job fit analysis, or how to write a cover letter — **without generating or editing any resume or content directly**.
+              
+                      You must not create, modify, or reformat the resume unless the ${chatBox} input explicitly instructs you to do so.
+              
+                      Your response must:
+                      - Be written in HTML format.
+                      - Only return the content within the <body> tag — do not include <html>, <head>, or <body> tags themselves.
+                      - If a resume is to be generated (only if explicitly asked), strictly follow the provided resume template, preserving original structure and spacing.
+                      `
                       : `
-                        You are a career advisor who helps users improve resumes, cover letters, and other job application content.
-                        Please generate a ${generateFileFormat(select.value)}, based on the provided information.
-                        The user will provide three inputs:
-                        - Resume template: ${resumeDocx}
-                        - Resume content: ${resumeOpenAI}
-                        - Job and company information, provided as an object representing the current job application the user is pursuing:
-                          - company: the target company name ${companyInfo.company}
-                          - position: the job title being applied for ${companyInfo.position}
-                          - companyDescription: a brief description of the company, including its culture, values, or business focus ${companyInfo.companyDesc}
-                     
-                        Feel free to update job titles, company names, skills, values, or any key details as needed to closely match the target role and company.
-                        Your response must follow a resume template format and be written in HTML. 
-                        Only return the content within the <body> tag — do not include <html>, <head>, or the <body> tags themselves.
-                        Strictly preserve the original format and spacing. Do not arbitrarily add, remove, or modify content structure.
-                        If a specific task is provided, it should take precedence over the default instructions.
-                        Your specific task is as follows:
-                        ${chatBox}
-                        `,
+                      You are a career advisor who helps users improve resumes, cover letters, and other job application content.
+                      Please generate a ${generateFileFormat(select.value)}, based on the provided information.
+                      The user will provide three inputs:
+                      - Resume template: ${resumeDocx}
+                      - Resume content: ${resumeOpenAI}
+                      - Job and company information, provided as an object representing the current job application the user is pursuing:
+                        - company: the target company name ${companyInfo.company}
+                        - position: the job title being applied for ${companyInfo.position}
+                        - companyDescription: a brief description of the company, including its culture, values, or business focus ${companyInfo.companyDesc}
+                   
+                      Feel free to update job titles, company names, skills, values, or any key details as needed to closely match the target role and company.
+                      Your response must follow a resume template format and be written in HTML. 
+                      Only return the content within the <body> tag — do not include <html>, <head>, or the <body> tags themselves.
+                      Strictly preserve the original format and spacing. Do not arbitrarily add, remove, or modify content structure.
+                      If a specific task is provided, it should take precedence over the default instructions.
+                      Your specific task is as follows:
+                      ${chatBox}
+                      `,
                   },
+                  ...messages,
                 ],
               }),
             },
@@ -733,7 +766,7 @@ document.addEventListener("DOMContentLoaded", () => {
           document.getElementById("loading").style.display = "none";
 
           if (data?.choices?.[0]?.message?.content) {
-            addMessage(null, data?.choices?.[0]?.message?.content);
+            addMessageChatWindow(null, data?.choices?.[0]?.message?.content);
 
             if (!toggle.checked) {
               generateDocx(data?.choices?.[0]?.message?.content, select.value);
@@ -770,10 +803,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
 document.addEventListener("DOMContentLoaded", () => {
   const key = document.getElementById("aikey");
+  const chatMode = document.getElementById("chatMode");
 
   chrome.storage.local.get(["openaiKey"]).then((result) => {
     if (result.openaiKey) {
       key.value = result.openaiKey;
+    }
+  });
+
+  chrome.storage.local.get(["chatMode"]).then((result) => {
+    if (result.chatMode) {
+      chatMode.value = result.chatMode;
     }
   });
 
