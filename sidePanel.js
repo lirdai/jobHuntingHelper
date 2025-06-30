@@ -590,7 +590,14 @@ function checkChatWindowEmpty() {
 
 function clearChatWindow() {
   const chatWindow = document.getElementById("chat_window");
-  chatWindow.innerHTML = "";
+  chatWindow.innerHTML = `
+    <div class="empty-icon" id="empty_icon">
+      <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      </svg>
+      <p>No messages yet</p>
+    </div>`;
   checkChatWindowEmpty();
 }
 
@@ -657,6 +664,9 @@ document.addEventListener("DOMContentLoaded", () => {
     createFileBtn.disabled = true;
     document.getElementById("overlay").style.display = "block";
     document.body.classList.add("locked");
+    if (document.getElementById("chatMode").value === "single") {
+      clearChatWindow();
+    }
 
     try {
       const fileIfOk = file?.value || resumeDocx;
@@ -814,6 +824,8 @@ document.addEventListener("DOMContentLoaded", () => {
   chrome.storage.local.get(["chatMode"]).then((result) => {
     if (result.chatMode) {
       chatMode.value = result.chatMode;
+    } else {
+      chatMode.value = "perTask";
     }
   });
 
