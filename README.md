@@ -1,5 +1,5 @@
 # Job Hunting Helper – Chrome Extension
-111111
+
 ## Overview
 **Job Hunting Helper** is a powerful Chrome extension that integrates OpenAI’s API to streamline your job application workflow. Whether you're applying via LinkedIn, Indeed, or Monster, it helps you auto-generate resumes, cover letters, follow-ups, and more — all tailored to your resume and the job description.
 
