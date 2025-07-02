@@ -642,9 +642,15 @@ document.addEventListener("DOMContentLoaded", () => {
 document.addEventListener("DOMContentLoaded", () => {
   const updateSettingBn = document.getElementById("updateSetting");
   const chatMode = document.getElementById("chatMode");
+  const reminder = document.getElementById("info-reminder");
 
   updateSettingBn.addEventListener("click", async () => {
-    chrome.storage.local.set({ chatMode: chatMode.value }, () => {});
+    chrome.storage.local.set({ chatMode: chatMode.value }).then(() => {
+      reminder.style.display = "block";
+      setTimeout(() => {
+        reminder.style.display = "none";
+      }, 3000);
+    });
   });
 });
 
