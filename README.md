@@ -1,38 +1,58 @@
-# Job Hunting Helper - Chrome Extension
+# Job Hunting Helper – Chrome Extension
 
 ## Overview
-**Job Hunting Helper** is a powerful Chrome extension that integrates OpenAI's API to streamline your job application process. Designed for efficiency and accuracy, it helps you generate personalized cover letters, optimize resumes, and highlight your accomplishments directly within your browser. Whether you're targeting roles on LinkedIn, Indeed, Monster, or elsewhere, Job Hunting Helper offers intelligent, context-aware support.
+**Job Hunting Helper** is a powerful Chrome extension that integrates OpenAI’s API to streamline your job application workflow. Whether you're applying via LinkedIn, Indeed, or Monster, it helps you auto-generate resumes, cover letters, follow-ups, and more — all tailored to your resume and the job description.
+
+Now powered by **ChatOnly**, an AI assistant that helps you navigate your job search — answer questions, analyze job fit, and guide your application process in real-time.
 
 ## Key Features
-- **Resume Optimization**  
-  Upload your resume and get AI-generated suggestions for improving clarity, tone, and impact.
+- ✅ **Resume Optimization**  
+  Upload your `.docx` resume and get AI-powered suggestions to improve tone, clarity, and structure.
 
-- **Cover Letter Generation**  
-  Generate personalized, job-specific cover letters based on the job description and your uploaded resume.
+- ✅ **Cover Letter Generation**  
+  Instantly create personalized cover letters based on any job description and your resume.
 
-- **Achievement Highlighting**  
-  Extract and emphasize your top achievements to make your application stand out.
+- ✅ **Achievement Highlighting**  
+  Extract and emphasize your top accomplishments to make your application stand out.
 
-- **Automatic Job Description Scraping**  
-  Automatically scrape job descriptions from popular platforms like LinkedIn, Indeed, and Monster — no more copy-pasting.
+- 🆕 **Generate More Job Materials**  
+  Easily create other job-hunting documents:
+  - Thank You Notes
+  - Follow-up Emails
+  - "Why Us" Answers
+  - "Why This Role" Statements
 
-- **.docx File Support**  
-  Seamlessly upload and parse `.docx` resumes using Mammoth.js, and export generated documents via docx.js.
+- 🧠 **ChatOnly (AI Assistant)**  
+  A real-time chat assistant that uses your resume and the job description to:
+  - Analyze your fit
+  - Answer common recruiter questions
+  - Offer improvement suggestions
 
-- **Persistent API Key Storage**  
-  Securely store your OpenAI API key locally using Chrome Extension storage APIs to avoid repeated input.
+- ⚙️ **Settings Panel** *(New)*  
+  Customize extension behavior and manage saved API keys for future updates.
 
-- **User-Friendly Sidebar Interface**  
-  Interact with all extension features through a clean and intuitive sidebar powered by the Chrome Extension Side Panel API.
+- 🔍 **Automatic Job Description Scraping**  
+  No more copy-paste! Scrapes job descriptions from LinkedIn, Indeed, and Monster.
 
-## How It Works
-1. Install the extension and pin it to your toolbar.
-2. Open any job listing on LinkedIn, Indeed, or Monster.
-3. Click the extension icon to activate the sidebar.
-4. Upload your resume (`.docx` format).
-5. Choose your desired output (Resume Optimization, Cover Letter, Achievements).
-6. Let the AI generate optimized content tailored to the job.
-7. Download the generated `.docx` documents, ready for submission.
+- 📂 **.docx Upload & Export**  
+  - Parse uploaded resumes via `Mammoth.js`  
+  - Export generated content using `docx.js`
+
+- 🔐 **Persistent OpenAI API Key Storage**  
+  Securely stores your API key locally using Chrome’s Storage API.
+
+- 🖼️ **Clean Sidebar Interface**  
+  Built using Chrome’s Side Panel API for an intuitive, seamless UX.
+
+### How It Works
+1. **Install** the extension and pin it to your browser toolbar.  
+2. **Open** any job listing on LinkedIn, Indeed, or Monster.  
+3. **Click** the extension icon to activate the sidebar.  
+4. **Upload** your resume (.docx format).  
+5. **Choose** your desired output: Resume Optimization, Cover Letter, Achievements, Thank You Letter, etc.  
+6. **Let the AI generate** tailored, high-quality content based on your resume and the job description.  
+7. **Download** your documents as `.docx` files, ready to submit.  
+8. **Need help?** Use **ChatOnly** to ask any job-hunting questions in real time — from improving your resume to preparing for interviews.  
 
 ## Demo
 Here are three video demos:
