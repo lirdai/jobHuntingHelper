@@ -390,14 +390,14 @@ function generateFilename(sectionType) {
 
 function generateFileFormat(sectionType) {
   const fileMap = {
-    resume: `Please revise the resume to closely match the job and company information: ${companyInfo}. Pay special attention to aligning skills, job titles, and company relevance. Follow the provided resume template exactly and preserve the original structure.`,
-    cover: `Please write a cover letter (150–200 words) in a single paragraph, using a complete structure: greeting (e.g., "Dear..."), body, closing (e.g., "Regards..."), and signature. Incorporate the company name and job title from: ${companyInfo}. The tone should be formal yet natural, in English.`,
-    achievement: `Describe my most significant professional achievement (150–200 words) in one paragraph, in English. The tone should be professional, concise, and slightly conversational.`,
-    why_us: `Explain why I want to work for this company (150–200 words) in one paragraph, in English. Refer to their culture, mission, or projects as described in: ${companyInfo}, and connect them to my background and values.`,
-    why_role: `Describe why I am applying for this specific role (150–200 words) in one paragraph, using the job details from: ${companyInfo}. Base your answer on my experience, and ensure the tone is formal, clear, and natural.`,
-    goal: `Describe my 5–10 year career goals in one paragraph (150–200 words), based on my current background. The tone should be clear, future-oriented, and professionally personal.`,
-    thank_you: `Write a thank-you letter (150–200 words) in one paragraph, using the company name and position from: ${companyInfo}. The letter should include a greeting (e.g., "Dear..."), body, closing (e.g., "Regards..."), and signature. Use a professional and slightly conversational tone.`,
-    follow_up: `Write a follow-up letter (150–200 words) in one paragraph, using the company name and position from: ${companyInfo}. The letter should include a greeting, body, closing, and signature. Keep the tone professional, polite, and concise.`,
+    resume: `Make sure the resume content — including job titles, values, skills, and achievements — closely matches the target job. Follow the provided template exactly and do not alter the original formatting or spacing.`,
+    cover: `Write a cover letter of around 150 words in a single paragraph. Use a complete structure: greeting (e.g., "Dear..."), body, closing (e.g., "Regards..."), and signature. Include the company name and job title, and align the content with the user’s resume and the company’s expectations. Keep the tone natural and conversational — avoid overly big or formal words.`,
+    achievement: `Write a ~150-word paragraph describing the user’s biggest professional achievement. Highlight something that aligns well with what the company is likely looking for. Keep the tone persuasive but natural and avoid exaggerated or overly formal language.`,
+    why_us: `Write a paragraph of around 150 words explaining why the user wants to join this company. Refer to the company’s mission, culture, products, or recent projects, and connect them to the user’s background or values. The tone should be sincere, personal, and conversational — not generic or overly formal.`,
+    why_role: `Write a ~150-word paragraph explaining why the user is applying for this specific role. Match the user’s resume content and experience with the job description. Focus on skills, motivations, and relevant past work. Keep the tone clear and personal — avoid empty or cliché expressions.`,
+    goal: `Write a ~150-word paragraph describing the user’s 5–10 year career goals. Tie them to the user’s current background and possibly to the direction this job could lead. The tone should be forward-looking and grounded — don’t make it sound like a generic template.`,
+    thank_you: `Write a thank-you letter in one paragraph (~150 words) with a complete structure: greeting ("Dear..."), body, closing ("Regards..."), and signature. Use the company name and job title where appropriate. The tone should be polite, appreciative, and naturally conversational.`,
+    follow_up: `Write a follow-up letter in one paragraph (~150 words) with a complete structure: greeting ("Dear..."), body, closing ("Regards..."), and signature. Use the company name and job title. Keep the tone polite and professional while restating interest in the position.`,
   };
 
   return fileMap[sectionType];
@@ -737,18 +737,17 @@ document.addEventListener("DOMContentLoaded", () => {
                         - companyDescription: a brief description of the company, including its culture, values, or business focus ${companyInfo.companyDesc}
                       - Optional chat context or instructions: ${chatBox}
               
-                      You are a professional career advisor. Your task is to engage in a conversation and answer the user’s career-related questions — such as how to improve their resume, job fit analysis, or how to write a cover letter — **without generating or editing any resume or content directly**.
-              
+                      You are a professional career advisor. Your task is to engage in a Q&A-style conversation and provide expert guidance on any career-related questions. 
+                      You do not generate or edit resume or cover letter content directly. 
+                      Instead, you offer personalized advice — like analyzing job fit, suggesting how to improve a resume for a specific role, or sharing insights on job market trends — just like a real career coach.
                       You must not create, modify, or reformat the resume unless the ${chatBox} input explicitly instructs you to do so.
               
                       Your response must:
                       - Be written in HTML format.
                       - Only return the content within the <body> tag — do not include <html>, <head>, or <body> tags themselves.
-                      - If a resume is to be generated (only if explicitly asked), strictly follow the provided resume template, preserving original structure and spacing.
-                      `
-                      : `
-                      You are a career advisor who helps users improve resumes, cover letters, and other job application content.
-                      Please generate a ${generateFileFormat(select.value)}, based on the provided information.
+                      - If a resume is to be generated (only if explicitly asked), strictly follow the provided resume template, preserving original structure and spacing.`
+                      : `You are a career advisor who helps users improve resumes, cover letters, and other job application content.
+                      Please ${generateFileFormat(select.value)}, based on the provided information.
                       The user will provide three inputs:
                       - Resume template: ${resumeDocx}
                       - Resume content: ${resumeOpenAI}
@@ -763,8 +762,7 @@ document.addEventListener("DOMContentLoaded", () => {
                       Strictly preserve the original format and spacing. Do not arbitrarily add, remove, or modify content structure.
                       If a specific task is provided, it should take precedence over the default instructions.
                       Your specific task is as follows:
-                      ${chatBox}
-                      `,
+                      ${chatBox}`,
                   },
                   ...messages,
                 ],
