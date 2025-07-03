@@ -56,7 +56,7 @@ Now powered by **ChatOnly**, an AI assistant that helps you navigate your job se
 
 ## Demo
 Here are video demos:
-sb!!!!!!!!
+
 ![Demo GIF](demo/clip.gif)
 ![Demo GIF](demo/clip1.gif)
 ![Demo GIF](demo/clip2.gif)
