@@ -55,7 +55,7 @@ Now powered by **ChatOnly**, an AI assistant that helps you navigate your job se
 8. **Need help?** Use **ChatOnly** to ask any job-hunting questions in real time — from improving your resume to preparing for interviews.  
 
 ## Demo
-Here are three video demos:
+Here are video demos:
 
 ![Demo GIF](demo/clip.gif)
 ![Demo GIF](demo/clip1.gif)
