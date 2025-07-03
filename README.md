@@ -60,6 +60,8 @@ Here are three video demos:
 ![Demo GIF](demo/clip.gif)
 ![Demo GIF](demo/clip1.gif)
 ![Demo GIF](demo/clip2.gif)
+![Demo GIF](demo/clip3.gif)
+![Demo GIF](demo/clip4.gif)
 
 ## Tech Stack
 - **Frontend**: HTML5, CSS3, JavaScript
